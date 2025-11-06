@@ -382,6 +382,11 @@
       "DESCRIPTION": "View your previous invoices, edit your billing details, or cancel your subscription.",
       "BUTTON_TXT": "Go to the billing portal"
     },
+    "V2_BILLING_PORTAL": {
+      "TITLE": "Manage your billing",
+      "DESCRIPTION": "View your credits balance, top up, manage subscriptions, and view transactions.",
+      "BUTTON_TXT": "Go to billing dashboard"
+    },
     "CAPTAIN": {
       "TITLE": "Captain",
       "DESCRIPTION": "Manage usage and credits for Captain AI.",
@@ -396,6 +401,120 @@
       "BUTTON_TXT": "Chat with us"
     },
     "NO_BILLING_USER": "Your billing account is being configured. Please refresh the page and try again."
+  },
+  "BILLING_SETTINGS_V2": {
+    "TITLE": "Billing",
+    "DESCRIPTION": "Manage your usage-based subscription with flexible credit-based pricing. Top up anytime or subscribe to a plan.",
+    "VIEW_PRICING": "View Pricing",
+    "OPEN_STRIPE_DASHBOARD": "Open Stripe Dashboard",
+    "CREDITS_BALANCE": {
+      "TITLE": "Captain Credits",
+      "DESCRIPTION": "Your current credit balance and recent transactions.",
+      "CURRENT_BALANCE": "Current Balance",
+      "CREDITS": "credits",
+      "REFRESH": "Refresh",
+      "BUY_CREDITS": "Buy Credits",
+      "VIEW_HISTORY": "View History",
+      "MONTHLY_CREDITS": "Monthly Credits",
+      "TOPUP_CREDITS": "Top-up Credits",
+      "USED_THIS_MONTH": "Used This Month",
+      "TOTAL_USED": "Total Used",
+      "USAGE_BASED_INFO": "Credits are consumed as you use Captain"
+    },
+    "PLAN_SUMMARY": {
+      "NAME": "Plan Name",
+      "PRICE": "Price",
+      "PER_MONTH": "{price}/month",
+      "RENEWAL_DATE": "Renewal Date",
+      "CREDITS_INCLUDED": "Captain AI Credits Included",
+      "NUMBER_OF_SEATS": "Number of Seats",
+      "ADJUST_SEATS_HINT": "Adjust seats to scale your plan",
+      "UPDATE": "Update",
+      "VIEW_ALL_PLANS": "View All Plans",
+      "CANCEL_PLAN": "Cancel Plan"
+    },
+    "PRICING_PLANS": {
+      "TITLE": "Pricing Plans",
+      "DESCRIPTION": "Choose a plan that fits your team. All plans include credits that reset monthly.",
+      "CURRENT_PLAN": "Current Subscription",
+      "RECOMMENDED": "Recommended",
+      "MONTH": "month",
+      "SEATS": "seats",
+      "CREDITS_PER_SEAT": "credits/month",
+      "MIN_SEATS": "Minimum seats",
+      "SUBSCRIBE": "Subscribe",
+      "SWITCH_PLAN": "Switch Plan",
+      "BLOCKED": "Blocked",
+      "PENDING_TITLE": "Pending Changes Scheduled",
+      "PENDING_MESSAGE": "Your subscription changes will take effect on your next billing date.",
+      "NEXT_PLAN": "Next Plan",
+      "NEXT_QUANTITY": "Next Quantity",
+      "EFFECTIVE_DATE": "Effective Date",
+      "CANCELLING_TITLE": "Subscription Ending",
+      "CANCELLING_MESSAGE": "Your subscription will be cancelled at the end of the current billing period. You can continue using your current plan until then.",
+      "CANCELLING_BLOCKED_INFO": "You cannot change plans or subscribe to new plans while your subscription is ending.",
+      "ENDS_ON": "Subscription ends on",
+      "NO_PLANS": "No pricing plans available.",
+      "SUBSCRIBE_SUCCESS": "Successfully subscribed to the plan! Your credits have been updated.",
+      "CANCEL_SUCCESS": "Subscription cancelled successfully.",
+      "UPDATE_QUANTITY_SUCCESS": "Subscription quantity updated successfully!",
+      "CHANGE_PLAN_SUCCESS": "Successfully changed to the new plan! Your credits have been updated."
+    },
+    "TOPUP_OPTIONS": {
+      "TITLE": "Top-up Credits",
+      "DESCRIPTION": "Add more credits to your account, to ensure uninterrupted Captain usage.",
+      "CREDITS": "Credits",
+      "PRICE": "Price",
+      "BUY_NOW": "Buy Now",
+      "NO_OPTIONS": "No top-up options available.",
+      "TOPUP_SUCCESS": "Credits added successfully! Your new balance is available now.",
+      "NO_PAYMENT_METHOD_ERROR": "No payment method found. Please add a payment method in your Stripe dashboard before making a purchase. Click the 'Open Stripe Dashboard' button above to add one.",
+      "UPGRADE_REQUIRED": "Upgrade your plan to purchase top-up credits.",
+      "UPGRADE_MESSAGE": "Top-ups are only available for Startup, Business, and Enterprise plans. Please upgrade your plan to purchase additional credits."
+    },
+    "CREDIT_GRANTS": {
+      "TITLE": "Credit History",
+      "CREDITS": "credits",
+      "EXPIRES": "Expires",
+      "NO_EXPIRY": "Never expires",
+      "ADDED": "Added on {date}",
+      "VOIDED": "Voided",
+      "NO_GRANTS": "No credit grants yet.",
+      "TOPUPS": "Topups",
+      "MONTHLY": "Monthly"
+    },
+    "SUBSCRIBE_MODAL": {
+      "TITLE": "Confirm Subscription",
+      "DESCRIPTION": "You are subscribing to {planName} for {planPrice} per seat with {credits} included credits for Captain AI.",
+      "NUMBER_OF_SEATS": "Number of seats",
+      "MIN": "Min",
+      "MAX": "Max",
+      "BASE_PRICE": "Base price per seat",
+      "INCLUDED_CREDITS": "Included credits",
+      "CREDITS": "credits",
+      "MONTHLY_TOTAL": "Monthly Total",
+      "CANCEL": "Cancel",
+      "CONFIRM": "Confirm Subscription"
+    },
+    "TOPUP_MODAL": {
+      "TITLE": "Confirm Top-up",
+      "DESCRIPTION": "Top up your account with {credits} credits for {price}. Your card will be immediately charged.",
+      "CREDITS": "Credits",
+      "PRICE": "Price",
+      "INFO": "Credits will be added to your account immediately and never expire.",
+      "CANCEL": "Cancel",
+      "CONFIRM": "Confirm Top-up"
+    },
+    "CANCEL_MODAL": {
+      "TITLE": "Cancel Subscription",
+      "WARNING_TITLE": "Are you sure?",
+      "WARNING_MESSAGE": "Cancelling your subscription will stop monthly credit renewals. Any remaining credits will still be available until used.",
+      "REASON_LABEL": "Reason for cancellation (optional)",
+      "REASON_PLACEHOLDER": "Help us improve by sharing why you're cancelling...",
+      "INFO": "You can resubscribe anytime to continue receiving monthly credits.",
+      "KEEP_SUBSCRIPTION": "Keep Subscription",
+      "CONFIRM_CANCEL": "Confirm Cancellation"
+    }
   },
   "SECURITY_SETTINGS": {
     "TITLE": "Security",
