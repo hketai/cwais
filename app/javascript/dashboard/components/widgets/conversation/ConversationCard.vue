@@ -86,12 +86,35 @@ const lastMessageInChat = computed(() => getLastMessage(props.chat));
 const callStatus = computed(
   () => props.chat.additional_attributes?.call_status
 );
-const callDirection = computed(
-  () => props.chat.additional_attributes?.call_direction
-);
+const callDirection = computed(() => {
+  const attrs = props.chat.additional_attributes || {};
+  const convDirection = attrs.call_direction || attrs.callDirection;
+  if (convDirection) {
+    return convDirection;
+  }
 
-const { labelKey: voiceLabelKey, listIconColor: voiceIconColor } =
-  useVoiceCallStatus(callStatus, callDirection);
+  const lastMessage = lastMessageInChat.value;
+  if (!lastMessage) {
+    return undefined;
+  }
+
+  const lastMessageAttrs =
+    lastMessage.content_attributes?.data ||
+    lastMessage.contentAttributes?.data ||
+    {};
+
+  return (
+    lastMessageAttrs.call_direction ||
+    lastMessageAttrs.callDirection ||
+    undefined
+  );
+});
+
+const {
+  labelKey: voiceLabelKey,
+  listIconColor: voiceIconColor,
+  bubbleIconName: voiceIconName,
+} = useVoiceCallStatus(callStatus, callDirection);
 
 const inboxId = computed(() => props.chat.inbox_id);
 
@@ -324,8 +347,8 @@ const deleteConversation = () => {
         :class="messagePreviewClass"
       >
         <span
-          class="inline-block -mt-0.5 align-middle text-[16px] i-ph-phone-incoming"
-          :class="[voiceIconColor]"
+          class="inline-block -mt-0.5 align-middle text-[16px]"
+          :class="[voiceIconColor, voiceIconName]"
         />
         <span class="mx-1">
           {{ $t(voiceLabelKey) }}
@@ -335,6 +358,7 @@ const deleteConversation = () => {
         v-else-if="lastMessageInChat"
         key="message-preview"
         :message="lastMessageInChat"
+        :conversation="chat"
         class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm"
         :class="messagePreviewClass"
       />

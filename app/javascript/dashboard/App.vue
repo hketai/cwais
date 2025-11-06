@@ -6,6 +6,7 @@ import NetworkNotification from './components/NetworkNotification.vue';
 import UpdateBanner from './components/app/UpdateBanner.vue';
 import PaymentPendingBanner from './components/app/PaymentPendingBanner.vue';
 import PendingEmailVerificationBanner from './components/app/PendingEmailVerificationBanner.vue';
+import FloatingCallWidget from './components/widgets/FloatingCallWidget.vue';
 import vueActionCable from './helper/actionCable';
 import { useRouter } from 'vue-router';
 import { useStore } from 'dashboard/composables/store';
@@ -14,11 +15,16 @@ import { setColorTheme } from './helper/themeHelper';
 import { isOnOnboardingView } from 'v3/helpers/RouteHelper';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useFontSize } from 'dashboard/composables/useFontSize';
+import { useRingtone } from 'dashboard/composables/useRingtone';
 import {
   registerSubscription,
   verifyServiceWorkerExistence,
 } from './helper/pushHelper';
 import ReconnectService from 'dashboard/helper/ReconnectService';
+import {
+  getAlertAudio,
+  initOnEvents,
+} from 'shared/helpers/AudioNotificationHelper';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 
 export default {
@@ -26,6 +32,7 @@ export default {
 
   components: {
     AddAccountModal,
+    FloatingCallWidget,
     LoadingState,
     NetworkNotification,
     UpdateBanner,
@@ -40,6 +47,7 @@ export default {
     // Use the font size composable (it automatically sets up the watcher)
     const { currentFontSize } = useFontSize();
     const { uiSettings } = useUISettings();
+    const { start: startRingTone, stop: stopRingTone } = useRingtone();
 
     return {
       router,
@@ -47,6 +55,8 @@ export default {
       currentAccountId: accountId,
       currentFontSize,
       uiSettings,
+      startRingTone,
+      stopRingTone,
     };
   },
   data() {
@@ -63,6 +73,9 @@ export default {
       currentUser: 'getCurrentUser',
       authUIFlags: 'getAuthUIFlags',
       accountUIFlags: 'accounts/getUIFlags',
+      hasActiveCall: 'calls/hasActiveCall',
+      incomingCall: 'calls/getIncomingCall',
+      hasIncomingCall: 'calls/hasIncomingCall',
     }),
     hasAccounts() {
       const { accounts = [] } = this.currentUser || {};
@@ -77,6 +90,24 @@ export default {
     currentUser() {
       if (!this.hasAccounts) {
         this.showAddAccountModal = true;
+      }
+    },
+    hasIncomingCall(newVal) {
+      // Drive ringtone globally based on incoming state; widget does not show for incoming per UX
+      try {
+        const call = this.incomingCall;
+        const isOutboundCall =
+          call?.callDirection === 'outbound' ||
+          (call?.callDirection == null && call?.isOutbound);
+        const shouldRing = Boolean(newVal && !isOutboundCall);
+
+        if (shouldRing) {
+          this.startRingTone();
+        } else {
+          this.stopRingTone();
+        }
+      } catch (e) {
+        // ignore ringtone errors
       }
     },
     currentAccountId: {
@@ -95,10 +126,30 @@ export default {
     this.setLocale(
       this.uiSettings?.locale || window.chatwootConfig.selectedLocale
     );
+
+    // Prepare dashboard ringtone on first user gesture to unlock AudioContext
+    window.playAudioAlert = window.playAudioAlert || (() => {});
+    const setupDashboardAudio = () => {
+      getAlertAudio('', { type: 'dashboard', alertTone: 'call-ring' }).then(
+        () => {
+          initOnEvents.forEach(evt =>
+            document.removeEventListener(evt, setupDashboardAudio, false)
+          );
+        }
+      );
+    };
+    initOnEvents.forEach(evt =>
+      document.addEventListener(evt, setupDashboardAudio, false)
+    );
   },
   unmounted() {
     if (this.reconnectService) {
       this.reconnectService.disconnect();
+    }
+    try {
+      this.stopRingTone();
+    } catch (e) {
+      // ignore ringtone errors
     }
   },
   methods: {
@@ -112,6 +163,7 @@ export default {
     setLocale(locale) {
       this.$root.$i18n.locale = locale;
     },
+    // Call widget control and cleanup are handled via Vuex only for MVP
     async initializeAccount() {
       await this.$store.dispatch('accounts/get');
       this.$store.dispatch('setActiveAccount', {
@@ -159,6 +211,8 @@ export default {
     <AddAccountModal :show="showAddAccountModal" :has-accounts="hasAccounts" />
     <WootSnackbarBox />
     <NetworkNotification />
+    <!-- Floating call widget (shows for incoming and active) -->
+    <FloatingCallWidget v-if="hasActiveCall || hasIncomingCall" />
   </div>
   <LoadingState v-else />
 </template>
