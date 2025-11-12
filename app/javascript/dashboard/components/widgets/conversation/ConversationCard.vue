@@ -86,12 +86,16 @@ const lastMessageInChat = computed(() => getLastMessage(props.chat));
 const callStatus = computed(
   () => props.chat.additional_attributes?.call_status
 );
+
 const callDirection = computed(
   () => props.chat.additional_attributes?.call_direction
 );
 
-const { labelKey: voiceLabelKey, listIconColor: voiceIconColor } =
-  useVoiceCallStatus(callStatus, callDirection);
+const {
+  labelKey: voiceLabelKey,
+  listIconColor: voiceIconColor,
+  bubbleIconName: voiceIconName,
+} = useVoiceCallStatus(callStatus, callDirection);
 
 const inboxId = computed(() => props.chat.inbox_id);
 
@@ -324,8 +328,8 @@ const deleteConversation = () => {
         :class="messagePreviewClass"
       >
         <span
-          class="inline-block -mt-0.5 align-middle text-[16px] i-ph-phone-incoming"
-          :class="[voiceIconColor]"
+          class="inline-block -mt-0.5 align-middle text-[16px]"
+          :class="[voiceIconName, voiceIconColor]"
         />
         <span class="mx-1">
           {{ $t(voiceLabelKey) }}

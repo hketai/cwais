@@ -3,15 +3,20 @@ import { computed } from 'vue';
 import BaseBubble from 'next/message/bubbles/Base.vue';
 import { useMessageContext } from '../provider.js';
 import { useVoiceCallStatus } from 'dashboard/composables/useVoiceCallStatus';
+import { MESSAGE_TYPES } from '../constants';
 
-const { contentAttributes } = useMessageContext();
+const { contentAttributes, messageType } = useMessageContext();
 
 const data = computed(() => contentAttributes.value?.data);
 
 const status = computed(() => data.value?.status);
-const direction = computed(() => data.value?.call_direction);
+const direction = computed(() => {
+  if (messageType.value === MESSAGE_TYPES.OUTGOING) return 'outbound';
+  if (messageType.value === MESSAGE_TYPES.INCOMING) return 'inbound';
+  return undefined;
+});
 
-const { labelKey, subtextKey, bubbleIconBg, bubbleIconName } =
+const { labelKey, subtextKey, bubbleIconBg, bubbleIconName, bubbleIconText } =
   useVoiceCallStatus(status, direction);
 
 const containerRingClass = computed(() => {
@@ -30,7 +35,7 @@ const containerRingClass = computed(() => {
           class="flex justify-center items-center rounded-full size-10 shrink-0"
           :class="bubbleIconBg"
         >
-          <span class="text-xl" :class="bubbleIconName" />
+          <span class="text-xl" :class="[bubbleIconText, bubbleIconName]" />
         </div>
 
         <div class="flex overflow-hidden flex-col flex-grow">
