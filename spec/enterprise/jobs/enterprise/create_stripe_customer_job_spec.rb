@@ -12,7 +12,7 @@ RSpec.describe Enterprise::CreateStripeCustomerJob, type: :job do
       .on_queue('default')
   end
 
-  it 'executes perform' do
+  it 'uses V1 customer creation service' do
     create_stripe_customer_service = double
     allow(Enterprise::Billing::CreateStripeCustomerService)
       .to receive(:new)
