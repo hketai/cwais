@@ -1,7 +1,9 @@
 // scss-lint:disable PropertySortOrder
+
+// NEXT COLORS START
 @layer base {
-  // NEXT COLORS START
-  :root {
+  :root,
+  :host {
     // slate
     --slate-1: 252 252 253;
     --slate-2: 249 249 251;
@@ -116,7 +118,8 @@
     --white-alpha: 255, 255, 255, 0.8;
   }
 
-  .dark {
+  .dark,
+  :host(.dark) {
     // slate
     --slate-1: 17 17 19;
     --slate-2: 24 25 27;
@@ -231,4 +234,3 @@
     --white-alpha: 255, 255, 255, 0.1;
   }
 }
-// NEXT COLORS END
