@@ -30,10 +30,24 @@ class Webhooks::WhatsappWebController < ActionController::API
   end
 
   def process_message(channel, message_data)
+    Rails.logger.info '[WHATSAPP_WEB] ===== WEBHOOK: MESSAGE RECEIVED ====='
+    Rails.logger.info "[WHATSAPP_WEB] Channel ID: #{channel.id}"
+    Rails.logger.info "[WHATSAPP_WEB] Message ID: #{message_data[:id]}"
+    Rails.logger.info "[WHATSAPP_WEB] From: #{message_data[:from]}"
+    Rails.logger.info "[WHATSAPP_WEB] FromMe: #{message_data[:fromMe]}"
+    Rails.logger.info "[WHATSAPP_WEB] Type: #{message_data[:type]}"
+    Rails.logger.info "[WHATSAPP_WEB] Body: #{message_data[:body]&.first(50)}"
+
     WhatsappWeb::IncomingMessageService.new(
       channel: channel,
       message_data: message_data
     ).perform
+
+    Rails.logger.info '[WHATSAPP_WEB] ===== WEBHOOK: MESSAGE PROCESSED SUCCESSFULLY ====='
+  rescue StandardError => e
+    Rails.logger.error "[WHATSAPP_WEB] ❌ WEBHOOK ERROR: #{e.class.name}: #{e.message}"
+    Rails.logger.error "[WHATSAPP_WEB] Backtrace: #{e.backtrace.first(10).join("\n")}"
+    raise
   end
 
   def process_qr_code(channel, qr_data)
@@ -51,27 +65,27 @@ class Webhooks::WhatsappWebController < ActionController::API
       status: 'connected',
       phone_number: params[:phone_number]
     )
-    
+
     # Create inbox now that connection is established
     create_inbox_for_channel(channel)
   end
-  
+
   def create_inbox_for_channel(channel)
     # Check if inbox already exists
     return if channel.inbox.present?
-    
+
     # Get inbox name from provider_config
     inbox_name = channel.provider_config&.dig('pending_inbox_name') || "WhatsApp Web #{channel.phone_number}"
-    
+
     # Create inbox
     inbox = channel.account.inboxes.create!(
       name: inbox_name,
       channel: channel
     )
-    
+
     # Remove pending_inbox_name from provider_config
     channel.update!(provider_config: (channel.provider_config || {}).except('pending_inbox_name'))
-    
+
     Rails.logger.info "[WHATSAPP_WEB] Inbox #{inbox.id} created for channel #{channel.id}"
   end
 
@@ -98,4 +112,3 @@ class Webhooks::WhatsappWebController < ActionController::API
     Rails.logger.info "[WHATSAPP_WEB] Message #{message.id} status updated to #{status} (source_id: #{message_id})"
   end
 end
-

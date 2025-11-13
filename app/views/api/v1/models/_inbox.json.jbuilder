@@ -126,6 +126,12 @@ if resource.whatsapp?
   json.reauthorization_required resource.channel.try(:reauthorization_required?)
 end
 
+if resource.channel_type == 'Channel::WhatsappWeb'
+  json.whatsapp_web_status resource.channel.try(:status)
+  json.whatsapp_web_qr_expires_at resource.channel.try(:qr_code_expires_at)
+  json.whatsapp_web_phone_number resource.channel.try(:phone_number)
+end
+
 ## Voice Channel Attributes
 if resource.channel_type == 'Channel::Voice'
   json.voice_call_webhook_url resource.channel.try(:voice_call_webhook_url)

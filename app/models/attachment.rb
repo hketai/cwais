@@ -105,9 +105,9 @@ class Attachment < ApplicationRecord
       extension: extension,
       data_url: file_url,
       thumb_url: thumb_url,
-      file_size: file.byte_size,
-      width: file.metadata[:width],
-      height: file.metadata[:height]
+      file_size: file.attached? ? file.byte_size : 0,
+      width: file.attached? && file.metadata.present? ? file.metadata[:width] : nil,
+      height: file.attached? && file.metadata.present? ? file.metadata[:height] : nil
     }
 
     metadata[:data_url] = metadata[:thumb_url] = external_url if message.inbox.instagram? && message.incoming?

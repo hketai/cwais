@@ -64,24 +64,33 @@ const handleAction = ({ action, id }) => {
   });
 };
 
-const handleCreateClose = () => {
-  dialogType.value = '';
-  selectedAssistant.value = null;
-  fetchAssistants();
-};
-
 const fetchAssistants = async () => {
   isFetching.value = true;
   try {
     const response = await saturnAssistantAPI.get();
+
     // Jbuilder returns array directly
-    assistants.value = Array.isArray(response.data) ? response.data : [];
+    // Handle both array and object responses
+    if (Array.isArray(response.data)) {
+      assistants.value = response.data;
+    } else if (response.data && Array.isArray(response.data.payload)) {
+      assistants.value = response.data.payload;
+    } else if (response.data && Array.isArray(response.data.data)) {
+      assistants.value = response.data.data;
+    } else {
+      assistants.value = [];
+    }
   } catch (error) {
-    console.error('Error fetching Saturn assistants:', error);
     assistants.value = [];
   } finally {
     isFetching.value = false;
   }
+};
+
+const handleCreateClose = () => {
+  dialogType.value = '';
+  selectedAssistant.value = null;
+  fetchAssistants();
 };
 
 onMounted(() => {
@@ -121,8 +130,11 @@ onMounted(() => {
           :documents-count="assistant.documents_count || 0"
           :responses-count="assistant.responses_count || 0"
           :connected-inboxes="assistant.connected_inboxes || []"
-          :is-active="true"
+          :assistant="assistant"
+          :all-assistants="assistants"
+          :is-active
           @item-action="handleAction"
+          @updated="fetchAssistants"
         />
       </div>
     </template>

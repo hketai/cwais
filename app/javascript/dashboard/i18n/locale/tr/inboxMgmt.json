@@ -776,6 +776,17 @@
       "REMOVE": "Yardım Merkezini Kaldır",
       "SUB_TEXT": "Yardım Merkezini gelen kutusuna ekleyin"
     },
+    "WHATSAPP_WEB": {
+      "STATUS": {
+        "CONNECTED": "Bağlı",
+        "CONNECTING": "QR taraması bekleniyor",
+        "DISCONNECTED": "Bağlantı kesildi",
+        "QR_EXPIRED": "QR kodunun süresi doldu",
+        "UNKNOWN": "Durum alınamadı"
+      },
+      "CONNECTED_TO": "{{phone}} numarasına bağlı",
+      "RECONNECT": "Yeniden bağla ve QR göster"
+    },
     "AUTO_ASSIGNMENT": {
       "MAX_ASSIGNMENT_LIMIT": "Otomatik atama limiti",
       "MAX_ASSIGNMENT_LIMIT_RANGE_ERROR": "Lütfen 0'dan büyük bir değer girin",
