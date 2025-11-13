@@ -40,6 +40,18 @@ class SaturnAssistant extends ApiClient {
       message_history: messageHistory,
     });
   }
+
+  updateWorkingHours({ assistantId, workingHours }) {
+    return axios.put(`${this.url}/${assistantId}/update_working_hours`, {
+      working_hours: workingHours,
+    });
+  }
+
+  updateHandoffSettings({ assistantId, handoffConfig }) {
+    return axios.put(`${this.url}/${assistantId}/update_handoff_settings`, {
+      handoff_config: handoffConfig,
+    });
+  }
 }
 
 export default new SaturnAssistant();

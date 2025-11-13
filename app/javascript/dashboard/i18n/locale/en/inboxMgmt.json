@@ -772,6 +772,17 @@
       "REMOVE": "Remove Help Center",
       "SUB_TEXT": "Attach a Help Center with the inbox"
     },
+    "WHATSAPP_WEB": {
+      "STATUS": {
+        "CONNECTED": "Connected",
+        "CONNECTING": "Awaiting QR scan",
+        "DISCONNECTED": "Disconnected",
+        "QR_EXPIRED": "QR code expired",
+        "UNKNOWN": "Status unavailable"
+      },
+      "CONNECTED_TO": "Linked to {{phone}}",
+      "RECONNECT": "Reconnect & show QR"
+    },
     "AUTO_ASSIGNMENT": {
       "MAX_ASSIGNMENT_LIMIT": "Auto assignment limit",
       "MAX_ASSIGNMENT_LIMIT_RANGE_ERROR": "Please enter a value greater than 0",

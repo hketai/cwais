@@ -74,6 +74,8 @@ Rails.application.routes.draw do
             resources :assistants do
               member do
                 post :playground
+                put :update_working_hours
+                put :update_handoff_settings
               end
               resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
               resources :scenarios

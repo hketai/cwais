@@ -999,10 +999,57 @@
         "REMOVE_ASSISTANT": "Asistanı Kaldır"
       },
       "WORKING_HOURS": {
-        "DESCRIPTION": "Asistanınızın çalışma saatlerini yapılandırın. Bu saatler dışında asistan otomatik olarak devre dışı kalacaktır."
+        "TITLE": "Çalışma Saatleri",
+        "DESCRIPTION": "Asistanınızın çalışma saatlerini yapılandırın. Bu saatler dışında asistan otomatik olarak devre dışı kalacaktır.",
+        "ENABLE": "Çalışma saatlerini etkinleştir",
+        "ALL_DAY": "Tüm gün",
+        "UNAVAILABLE": "Kapalı",
+        "INVALID_TIME": "Geçersiz saat aralığı",
+        "VALIDATION_ERROR": "Lütfen geçerli saat aralıkları seçin",
+        "SAVE": "Kaydet",
+        "CANCEL": "İptal",
+        "SAVE_SUCCESS": "Çalışma saatleri başarıyla kaydedildi",
+        "SAVE_ERROR": "Çalışma saatleri kaydedilemedi",
+        "DAYS": {
+          "SUNDAY": "Pazar",
+          "MONDAY": "Pazartesi",
+          "TUESDAY": "Salı",
+          "WEDNESDAY": "Çarşamba",
+          "THURSDAY": "Perşembe",
+          "FRIDAY": "Cuma",
+          "SATURDAY": "Cumartesi"
+        },
+        "TIME_SEPARATOR": "-",
+        "MIDNIGHT": "12:00 AM"
       },
       "HANDOFF": {
-        "DESCRIPTION": "Asistanınızın müşterileri bir insan temsilciye nasıl devredeceğini yapılandırın."
+        "TITLE": "Devretme Ayarları",
+        "DESCRIPTION": "Intent durumuna göre konuşmaları insan temsilciye veya başka bir asistana devretme kurallarını yapılandırın.",
+        "ENABLE": "Intent tabanlı devretmeyi etkinleştir",
+        "INTENTS": "Intent'ler",
+        "ADD_INTENT": "Intent Ekle",
+        "REMOVE_INTENT": "Kaldır",
+        "INTENT_ENABLED": "Etkin",
+        "INTENT_NAME": "Intent Adı",
+        "INTENT_NAME_PLACEHOLDER": "Örn: Şikayet, Ürün Sorma, Teknik Destek",
+        "KEYWORDS": "Anahtar Kelimeler",
+        "KEYWORDS_PLACEHOLDER": "Örn: şikayet, problem, sorun",
+        "KEYWORDS_HELP": "Virgülle ayrılmış anahtar kelimeler. Mesajda bu kelimelerden biri bulunursa intent tetiklenir.",
+        "HANDOFF_TARGET": "Devretme Hedefi",
+        "TARGET_TYPES": {
+          "HUMAN": "İnsan Temsilci",
+          "ASSISTANT": "Başka Bir Asistan"
+        },
+        "SELECT_ASSISTANT": "Asistan Seç",
+        "SELECT_ASSISTANT_PLACEHOLDER": "Bir asistan seçin",
+        "HANDOFF_MESSAGE": "Devretme Mesajı (Opsiyonel)",
+        "HANDOFF_MESSAGE_PLACEHOLDER": "Devretme sırasında gönderilecek mesaj",
+        "NO_INTENTS": "Henüz intent eklenmedi. Intent eklemek için yukarıdaki butona tıklayın.",
+        "SAVE": "Kaydet",
+        "CANCEL": "İptal",
+        "SAVE_SUCCESS": "Devretme ayarları başarıyla kaydedildi",
+        "SAVE_ERROR": "Devretme ayarları kaydedilemedi",
+        "VALIDATION_ERROR": "Lütfen tüm intent alanlarını doldurun"
       },
       "CREATE": {
         "TITLE": "Asistan Oluştur",

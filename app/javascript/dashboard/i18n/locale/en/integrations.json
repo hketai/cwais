@@ -998,10 +998,57 @@
         "REMOVE_ASSISTANT": "Remove Assistant"
       },
       "WORKING_HOURS": {
-        "DESCRIPTION": "Configure your assistant's working hours. The assistant will be automatically disabled outside these hours."
+        "TITLE": "Working Hours",
+        "DESCRIPTION": "Configure your assistant's working hours. The assistant will be automatically disabled outside these hours.",
+        "ENABLE": "Enable working hours",
+        "ALL_DAY": "All day",
+        "UNAVAILABLE": "Closed",
+        "INVALID_TIME": "Invalid time range",
+        "VALIDATION_ERROR": "Please select valid time ranges",
+        "SAVE": "Save",
+        "CANCEL": "Cancel",
+        "SAVE_SUCCESS": "Working hours saved successfully",
+        "SAVE_ERROR": "Failed to save working hours",
+        "DAYS": {
+          "SUNDAY": "Sunday",
+          "MONDAY": "Monday",
+          "TUESDAY": "Tuesday",
+          "WEDNESDAY": "Wednesday",
+          "THURSDAY": "Thursday",
+          "FRIDAY": "Friday",
+          "SATURDAY": "Saturday"
+        },
+        "TIME_SEPARATOR": "-",
+        "MIDNIGHT": "12:00 AM"
       },
       "HANDOFF": {
-        "DESCRIPTION": "Configure how your assistant hands off customers to a human agent."
+        "TITLE": "Handoff Settings",
+        "DESCRIPTION": "Configure handoff rules to transfer conversations to human agents or other assistants based on intent detection.",
+        "ENABLE": "Enable intent-based handoff",
+        "INTENTS": "Intents",
+        "ADD_INTENT": "Add Intent",
+        "REMOVE_INTENT": "Remove",
+        "INTENT_ENABLED": "Enabled",
+        "INTENT_NAME": "Intent Name",
+        "INTENT_NAME_PLACEHOLDER": "E.g.: Complaint, Product Inquiry, Technical Support",
+        "KEYWORDS": "Keywords",
+        "KEYWORDS_PLACEHOLDER": "E.g.: complaint, problem, issue",
+        "KEYWORDS_HELP": "Comma-separated keywords. Intent will trigger if any of these keywords are found in the message.",
+        "HANDOFF_TARGET": "Handoff Target",
+        "TARGET_TYPES": {
+          "HUMAN": "Human Agent",
+          "ASSISTANT": "Another Assistant"
+        },
+        "SELECT_ASSISTANT": "Select Assistant",
+        "SELECT_ASSISTANT_PLACEHOLDER": "Select an assistant",
+        "HANDOFF_MESSAGE": "Handoff Message (Optional)",
+        "HANDOFF_MESSAGE_PLACEHOLDER": "Message to send during handoff",
+        "NO_INTENTS": "No intents added yet. Click the button above to add an intent.",
+        "SAVE": "Save",
+        "CANCEL": "Cancel",
+        "SAVE_SUCCESS": "Handoff settings saved successfully",
+        "SAVE_ERROR": "Failed to save handoff settings",
+        "VALIDATION_ERROR": "Please fill in all intent fields"
       },
       "CREATE": {
         "TITLE": "Create Assistant",
