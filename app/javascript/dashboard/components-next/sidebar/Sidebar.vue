@@ -8,6 +8,8 @@ import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useStorage } from '@vueuse/core';
 import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
+import { vOnClickOutside } from '@vueuse/components';
+import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarGroup from './SidebarGroup.vue';
@@ -16,11 +18,20 @@ import ChannelLeaf from './ChannelLeaf.vue';
 import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
 import Logo from 'next/icon/Logo.vue';
 import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
+import SaturnIcon from 'dashboard/components-next/icon/SaturnIcon.vue';
+
+const props = defineProps({
+  isMobileSidebarOpen: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const emit = defineEmits([
   'closeKeyShortcutModal',
   'openKeyShortcutModal',
   'showCreateAccountModal',
+  'closeMobileSidebar',
 ]);
 
 const { accountScopedRoute } = useAccount();
@@ -77,6 +88,11 @@ const sortedInboxes = computed(() =>
   inboxes.value.slice().sort((a, b) => a.name.localeCompare(b.name))
 );
 
+const closeMobileSidebar = () => {
+  if (!props.isMobileSidebarOpen) return;
+  emit('closeMobileSidebar');
+};
+
 const newReportRoutes = () => [
   {
     name: 'Reports Agent',
@@ -110,17 +126,58 @@ const menuItems = computed(() => {
     {
       name: 'Inbox',
       label: t('SIDEBAR.INBOX'),
-      icon: 'i-lucide-inbox',
+      icon: h(
+        'svg',
+        {
+          class: 'size-4',
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          xmlns: 'http://www.w3.org/2000/svg',
+        },
+        [
+          h('path', {
+            d: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('polyline', {
+            points: '22,6 12,13 2,6',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+        ]
+      ),
       to: accountScopedRoute('inbox_view'),
       activeOn: ['inbox_view', 'inbox_view_conversation'],
       getterKeys: {
-        badge: 'notifications/getHasUnreadNotifications',
+        count: 'notifications/getUnreadCount',
       },
     },
     {
       name: 'Conversation',
       label: t('SIDEBAR.CONVERSATIONS'),
-      icon: 'i-lucide-message-circle',
+      icon: h(
+        'svg',
+        {
+          class: 'size-4',
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          xmlns: 'http://www.w3.org/2000/svg',
+        },
+        [
+          h('path', {
+            d: 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+        ]
+      ),
       children: [
         {
           name: 'All',
@@ -143,7 +200,24 @@ const menuItems = computed(() => {
         {
           name: 'Folders',
           label: t('SIDEBAR.CUSTOM_VIEWS_FOLDER'),
-          icon: 'i-lucide-folder',
+          icon: h(
+            'svg',
+            {
+              class: 'size-4',
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              xmlns: 'http://www.w3.org/2000/svg',
+            },
+            [
+              h('path', {
+                d: 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+            ]
+          ),
           activeOn: ['conversations_through_folders'],
           children: conversationCustomViews.value.map(view => ({
             name: `${view.name}-${view.id}`,
@@ -154,7 +228,47 @@ const menuItems = computed(() => {
         {
           name: 'Teams',
           label: t('SIDEBAR.TEAMS'),
-          icon: 'i-lucide-users',
+          icon: h(
+            'svg',
+            {
+              class: 'size-4',
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              xmlns: 'http://www.w3.org/2000/svg',
+            },
+            [
+              h('path', {
+                d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+              h('circle', {
+                cx: '9',
+                cy: '7',
+                r: '4',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+              h('path', {
+                d: 'M23 21v-2a4 4 0 0 0-3-3.87',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+              h('path', {
+                d: 'M16 3.13a4 4 0 0 1 0 7.75',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+            ]
+          ),
           activeOn: ['conversations_through_team'],
           children: teams.value.map(team => ({
             name: `${team.name}-${team.id}`,
@@ -165,7 +279,31 @@ const menuItems = computed(() => {
         {
           name: 'Channels',
           label: t('SIDEBAR.CHANNELS'),
-          icon: 'i-lucide-mailbox',
+          icon: h(
+            'svg',
+            {
+              class: 'size-4',
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              xmlns: 'http://www.w3.org/2000/svg',
+            },
+            [
+              h('path', {
+                d: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+              h('polyline', {
+                points: '22,6 12,13 2,6',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+            ]
+          ),
           activeOn: ['conversation_through_inbox'],
           children: sortedInboxes.value.map(inbox => ({
             name: `${inbox.name}-${inbox.id}`,
@@ -182,7 +320,34 @@ const menuItems = computed(() => {
         {
           name: 'Labels',
           label: t('SIDEBAR.LABELS'),
-          icon: 'i-lucide-tag',
+          icon: h(
+            'svg',
+            {
+              class: 'size-4',
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              xmlns: 'http://www.w3.org/2000/svg',
+            },
+            [
+              h('path', {
+                d: 'M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+              h('line', {
+                x1: '7',
+                y1: '7',
+                x2: '7.01',
+                y2: '7',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+            ]
+          ),
           activeOn: ['conversations_through_label'],
           children: labels.value.map(label => ({
             name: `${label.title}-${label.id}`,
@@ -200,7 +365,38 @@ const menuItems = computed(() => {
     },
     {
       name: 'Captain',
-      icon: 'i-woot-captain',
+      icon: h(
+        'svg',
+        {
+          class: 'size-4',
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          xmlns: 'http://www.w3.org/2000/svg',
+        },
+        [
+          h('path', {
+            d: 'M12 2L2 7l10 5 10-5-10-5z',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('path', {
+            d: 'M2 17l10 5 10-5',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('path', {
+            d: 'M2 12l10 5 10-5',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+        ]
+      ),
       label: t('SIDEBAR.CAPTAIN'),
       children: [
         {
@@ -218,12 +414,81 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.CAPTAIN_RESPONSES'),
           to: accountScopedRoute('captain_responses_index'),
         },
+        {
+          name: 'Tools',
+          label: t('SIDEBAR.CAPTAIN_TOOLS'),
+          to: accountScopedRoute('captain_tools_index'),
+        },
+      ],
+    },
+    {
+      name: 'Saturn',
+      icon: h(SaturnIcon, { class: 'size-4' }),
+      label: t('SIDEBAR.SATURN'),
+      to: accountScopedRoute('saturn_assistants_index'),
+      featureFlag: null,
+      children: [
+        {
+          name: 'Assistants',
+          label: t('SIDEBAR.SATURN_ASSISTANTS'),
+          to: accountScopedRoute('saturn_assistants_index'),
+        },
+        {
+          name: 'Documents',
+          label: t('SIDEBAR.SATURN_DOCUMENTS'),
+          to: accountScopedRoute('saturn_documents_index'),
+        },
+        {
+          name: 'Responses',
+          label: t('SIDEBAR.SATURN_RESPONSES'),
+          to: accountScopedRoute('saturn_responses_index'),
+        },
       ],
     },
     {
       name: 'Contacts',
       label: t('SIDEBAR.CONTACTS'),
-      icon: 'i-lucide-contact',
+      icon: h(
+        'svg',
+        {
+          class: 'size-4',
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          xmlns: 'http://www.w3.org/2000/svg',
+        },
+        [
+          h('path', {
+            d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('circle', {
+            cx: '9',
+            cy: '7',
+            r: '4',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('path', {
+            d: 'M23 21v-2a4 4 0 0 0-3-3.87',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('path', {
+            d: 'M16 3.13a4 4 0 0 1 0 7.75',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+        ]
+      ),
       children: [
         {
           name: 'All Contacts',
@@ -243,7 +508,47 @@ const menuItems = computed(() => {
         },
         {
           name: 'Segments',
-          icon: 'i-lucide-group',
+          icon: h(
+            'svg',
+            {
+              class: 'size-4',
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              xmlns: 'http://www.w3.org/2000/svg',
+            },
+            [
+              h('path', {
+                d: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+              h('circle', {
+                cx: '9',
+                cy: '7',
+                r: '4',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+              h('path', {
+                d: 'M23 21v-2a4 4 0 0 0-3-3.87',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+              h('path', {
+                d: 'M16 3.13a4 4 0 0 1 0 7.75',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+            ]
+          ),
           label: t('SIDEBAR.CUSTOM_VIEWS_SEGMENTS'),
           children: contactCustomViews.value.map(view => ({
             name: `${view.name}-${view.id}`,
@@ -261,7 +566,34 @@ const menuItems = computed(() => {
         },
         {
           name: 'Tagged With',
-          icon: 'i-lucide-tag',
+          icon: h(
+            'svg',
+            {
+              class: 'size-4',
+              viewBox: '0 0 24 24',
+              fill: 'none',
+              xmlns: 'http://www.w3.org/2000/svg',
+            },
+            [
+              h('path', {
+                d: 'M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+              h('line', {
+                x1: '7',
+                y1: '7',
+                x2: '7.01',
+                y2: '7',
+                stroke: 'currentColor',
+                'stroke-width': '1.5',
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+              }),
+            ]
+          ),
           label: t('SIDEBAR.TAGGED_WITH'),
           children: labels.value.map(label => ({
             name: `${label.title}-${label.id}`,
@@ -286,7 +618,31 @@ const menuItems = computed(() => {
     {
       name: 'Reports',
       label: t('SIDEBAR.REPORTS'),
-      icon: 'i-lucide-chart-spline',
+      icon: h(
+        'svg',
+        {
+          class: 'size-4',
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          xmlns: 'http://www.w3.org/2000/svg',
+        },
+        [
+          h('polyline', {
+            points: '22 6 13.5 14.5 8.5 9.5 2 16',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('polyline', {
+            points: '16 6 22 6 22 12',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+        ]
+      ),
       children: [
         {
           name: 'Report Overview',
@@ -319,7 +675,38 @@ const menuItems = computed(() => {
     {
       name: 'Campaigns',
       label: t('SIDEBAR.CAMPAIGNS'),
-      icon: 'i-lucide-megaphone',
+      icon: h(
+        'svg',
+        {
+          class: 'size-4',
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          xmlns: 'http://www.w3.org/2000/svg',
+        },
+        [
+          h('path', {
+            d: 'M3 11c0-1.1.9-2 2-2h4a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9z',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('path', {
+            d: 'M7 11V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v5',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('path', {
+            d: 'M11 11v9a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-9',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+        ]
+      ),
       children: [
         {
           name: 'Live chat',
@@ -331,12 +718,61 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.SMS'),
           to: accountScopedRoute('campaigns_sms_index'),
         },
+        {
+          name: 'WhatsApp',
+          label: t('SIDEBAR.WHATSAPP'),
+          to: accountScopedRoute('campaigns_whatsapp_index'),
+        },
       ],
     },
     {
       name: 'Portals',
       label: t('SIDEBAR.HELP_CENTER.TITLE'),
-      icon: 'i-lucide-library-big',
+      icon: h(
+        'svg',
+        {
+          class: 'size-4',
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          xmlns: 'http://www.w3.org/2000/svg',
+        },
+        [
+          h('path', {
+            d: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('path', {
+            d: 'M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('line', {
+            x1: '9',
+            y1: '7',
+            x2: '15',
+            y2: '7',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+          h('line', {
+            x1: '9',
+            y1: '11',
+            x2: '15',
+            y2: '11',
+            stroke: 'currentColor',
+            'stroke-width': '1.5',
+            'stroke-linecap': 'round',
+            'stroke-linejoin': 'round',
+          }),
+        ]
+      ),
       children: [
         {
           name: 'Articles',
@@ -402,6 +838,12 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.TEAMS'),
           icon: 'i-lucide-users',
           to: accountScopedRoute('settings_teams_list'),
+        },
+        {
+          name: 'Settings Agent Assignment',
+          label: t('SIDEBAR.AGENT_ASSIGNMENT'),
+          icon: 'i-lucide-user-cog',
+          to: accountScopedRoute('assignment_policy_index'),
         },
         {
           name: 'Settings Inboxes',
@@ -470,6 +912,12 @@ const menuItems = computed(() => {
           to: accountScopedRoute('sla_list'),
         },
         {
+          name: 'Settings Security',
+          label: t('SIDEBAR.SECURITY'),
+          icon: 'i-lucide-shield',
+          to: accountScopedRoute('security_settings_index'),
+        },
+        {
           name: 'Settings Billing',
           label: t('SIDEBAR.BILLING'),
           icon: 'i-lucide-credit-card',
@@ -483,7 +931,17 @@ const menuItems = computed(() => {
 
 <template>
   <aside
-    class="w-[200px] bg-n-solid-2 rtl:border-l ltr:border-r border-n-weak h-screen flex flex-col text-sm pb-1"
+    v-on-click-outside="[
+      closeMobileSidebar,
+      { ignore: ['#mobile-sidebar-launcher'] },
+    ]"
+    class="bg-n-solid-2 rtl:border-l ltr:border-r border-n-weak flex flex-col text-sm pb-1 fixed top-0 ltr:left-0 rtl:right-0 h-full z-40 transition-transform duration-200 ease-in-out md:static w-[200px] basis-[200px] md:flex-shrink-0 md:ltr:translate-x-0 md:rtl:-translate-x-0"
+    :class="[
+      {
+        'shadow-lg md:shadow-none': isMobileSidebarOpen,
+        'ltr:-translate-x-full rtl:translate-x-full': !isMobileSidebarOpen,
+      },
+    ]"
   >
     <section class="grid gap-2 mt-2 mb-4">
       <div class="flex items-center min-w-0 gap-2 px-2">

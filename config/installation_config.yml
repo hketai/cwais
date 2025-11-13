@@ -10,37 +10,38 @@
 # locked: if you don't specify locked attribute in yaml, the default value will be true,
 #         which means the particular config will be locked and won't be available in `super_admin/installation_configs`
 # premium: These values get overwritten unless the user is on a premium plan
-# type: The type of the config. Default is text,  boolean is also supported
+# type: The type of the config. Default is text, select and boolean are also supported
+# options: For select types, its required to have options for the select in the following pattern: "option_value":"Human readable option"
 
 # ------- Branding Related Config ------- #
 - name: INSTALLATION_NAME
-  value: 'Chatwoot'
+  value: 'AISATURN'
   display_title: 'Installation Name'
   description: 'The installation wide name that would be used in the dashboard, title etc.'
 - name: LOGO_THUMBNAIL
-  value: '/brand-assets/logo_thumbnail.svg'
+  value: '/brand-assets/logo.png'
   display_title: 'Logo Thumbnail'
   description: 'The thumbnail that would be used for favicon (512px X 512px)'
 - name: LOGO
-  value: '/brand-assets/logo.svg'
+  value: '/brand-assets/logo.png'
   display_title: 'Logo'
   description: 'The logo that would be used on the dashboard, login page etc.'
 - name: LOGO_DARK
-  value: '/brand-assets/logo_dark.svg'
+  value: '/brand-assets/logo_dark.png'
   display_title: 'Logo Dark Mode'
   description: 'The logo that would be used on the dashboard, login page etc. for dark mode'
 - name: BRAND_URL
-  value: 'https://www.chatwoot.com'
+  value: 'https://aisaturn.co'
   display_title: 'Brand URL'
-  description: 'The URL that would be used in emails under the section “Powered By”'
+  description: 'The URL that would be used in emails under the section "Powered By"'
 - name: WIDGET_BRAND_URL
-  value: 'https://www.chatwoot.com'
+  value: 'https://aisaturn.co'
   display_title: 'Widget Brand URL'
-  description: 'The URL that would be used in the widget under the section “Powered By”'
+  description: 'The URL that would be used in the widget under the section "Powered By"'
 - name: BRAND_NAME
-  value: 'Chatwoot'
+  value: ''
   display_title: 'Brand Name'
-  description: 'The name that would be used in emails and the widget'
+  description: 'The name that would be used in emails and the widget. Leave empty to hide "Powered by" branding.'
 - name: TERMS_URL
   value: 'https://www.chatwoot.com/terms-of-service'
   display_title: 'Terms URL'
@@ -50,7 +51,7 @@
   display_title: 'Privacy URL'
   description: 'The privacy policy URL displayed in the app'
 - name: DISPLAY_MANIFEST
-  value: true
+  value: false
   display_title: 'Chatwoot Metadata'
   description: 'Display default Chatwoot metadata like favicons and upgrade warnings'
   type: boolean
@@ -87,11 +88,14 @@
 
 # ------- Email Related Config ------- #
 - name: MAILER_INBOUND_EMAIL_DOMAIN
+  display_title: 'Inbound Email Domain'
   value:
   description: 'The domain name to be used for generating conversation continuity emails (reply+id@domain.com)'
   locked: false
 - name: MAILER_SUPPORT_EMAIL
+  display_title: 'Support Email'
   value:
+  description: 'The support email address for your installation'
   locked: false
 # ------- End of Email Related Config ------- #
 
@@ -116,7 +120,7 @@
 - name: FACEBOOK_API_VERSION
   display_title: 'Facebook API Version'
   description: 'Configure this if you want to use a different Facebook API version. Make sure its prefixed with `v`'
-  value: 'v17.0'
+  value: 'v18.0'
   locked: false
 - name: ENABLE_MESSENGER_CHANNEL_HUMAN_AGENT
   display_title: 'Enable human agent'
@@ -125,6 +129,26 @@
   description: 'Enable human agent for messenger channel for longer message back period. Needs additional app approval: https://developers.facebook.com/docs/features-reference/human-agent/'
   type: boolean
 # ------- End of Facebook Channel Related Config ------- #
+
+# ------- WhatsApp Channel Related Config ------- #
+- name: WHATSAPP_APP_ID
+  display_title: 'WhatsApp App ID'
+  description: 'The Facebook App ID for WhatsApp Business API integration'
+  locked: false
+- name: WHATSAPP_CONFIGURATION_ID
+  display_title: 'WhatsApp Configuration ID'
+  description: 'The Configuration ID for WhatsApp Embedded Signup flow (required for embedded signup)'
+  locked: false
+- name: WHATSAPP_APP_SECRET
+  display_title: 'WhatsApp App Secret'
+  description: 'The App Secret for WhatsApp Embedded Signup flow (required for embedded signup)'
+  locked: false
+- name: WHATSAPP_API_VERSION
+  display_title: 'WhatsApp API Version'
+  description: 'Configure this if you want to use a different WhatsApp API version. Make sure its prefixed with `v`'
+  value: 'v22.0'
+  locked: false
+# ------- End of WhatsApp Channel Related Config ------- #
 
 # MARK: Microsoft Email Channel Config
 - name: AZURE_APP_ID
@@ -137,28 +161,50 @@
   type: secret
 # End of Microsoft Email Channel Config
 
-# MARK: Captain Config
-- name: CAPTAIN_OPEN_AI_API_KEY
+# MARK: Saturn AI Config
+- name: SATURN_OPEN_AI_API_KEY
   display_title: 'OpenAI API Key'
-  description: 'The API key used to authenticate requests to OpenAI services for Captain AI.'
+  description: 'The API key used to authenticate requests to OpenAI services for Saturn AI.'
   locked: false
   type: secret
-- name: CAPTAIN_OPEN_AI_MODEL
+- name: SATURN_OPEN_AI_MODEL
   display_title: 'OpenAI Model'
-  description: 'The OpenAI model configured for use in Captain AI. Default: gpt-4o-mini'
+  description: 'The OpenAI model configured for use in Saturn AI. Default: gpt-4o-mini'
   locked: false
-- name: CAPTAIN_FIRECRAWL_API_KEY
-  display_title: 'FireCrawl API Key (optional)'
-  description: 'The FireCrawl API key for the Captain AI service'
+- name: SATURN_OPEN_AI_ENDPOINT
+  display_title: 'OpenAI API Endpoint (optional)'
+  description: 'The OpenAI endpoint configured for use in Saturn AI. Default: https://api.openai.com/'
   locked: false
-  type: secret
-- name: CAPTAIN_CLOUD_PLAN_LIMITS
-  display_title: 'Captain Cloud Plan Limits'
-  description: 'The limits for the Captain AI service for different plans'
-  value:
-  type: code
-
-# End of Captain Config
+- name: SATURN_EMBEDDING_MODEL
+  display_title: 'Embedding Model (optional)'
+  description: 'The embedding model configured for use in Saturn AI. Default: text-embedding-3-small'
+  locked: false
+# ------- Saturn AI Config ------- #
+- name: SATURN_ENABLED
+  value: true
+  display_title: 'Enable Saturn AI'
+  description: 'Enable or disable Saturn AI features across the installation'
+  locked: false
+  type: boolean
+- name: SATURN_MAX_ASSISTANTS
+  value: 10
+  display_title: 'Max Assistants per Account'
+  description: 'Maximum number of Saturn assistants allowed per account'
+  locked: false
+  type: number
+- name: SATURN_MAX_DOCUMENTS
+  value: 50
+  display_title: 'Max Documents per Assistant'
+  description: 'Maximum number of documents allowed per Saturn assistant'
+  locked: false
+  type: number
+- name: SATURN_MAX_RESPONSES
+  value: 100
+  display_title: 'Max Responses per Assistant'
+  description: 'Maximum number of responses allowed per Saturn assistant'
+  locked: false
+  type: number
+# ------- End of Saturn AI Config ------- #
 
 # ------- Chatwoot Internal Config for Cloud ----#
 - name: CHATWOOT_INBOX_TOKEN
@@ -187,7 +233,7 @@
 - name: ANALYTICS_TOKEN
   value:
   display_title: 'Analytics Token'
-  description: 'The June.so analytics token for Chatwoot cloud'
+  description: 'The PostHog analytics token for Chatwoot cloud'
   type: secret
 - name: CLEARBIT_API_KEY
   value:
@@ -204,6 +250,10 @@
   display_title: 'Blocked Email Domains'
   description: 'Add a domain per line to block them from signing up, accepts Regex'
   type: code
+- name: SKIP_INCOMING_BCC_PROCESSING
+  value:
+  display_title: 'Skip BCC Processing For'
+  description: 'Comma-separated list of account IDs that should be skipped from incoming BCC processing'
 - name: INACTIVE_WHATSAPP_NUMBERS
   value: ''
   display_title: 'Inactive WhatsApp Numbers'
@@ -360,3 +410,58 @@
   value: 'v22.0'
   locked: true
 # ------- End of Instagram Channel Related Config ------- #
+
+# ------- OG Image Related Config ------- #
+- name: OG_IMAGE_CDN_URL
+  display_title: 'OG Image CDN URL'
+  description: 'The CDN URL for serving OG images'
+  value: ''
+  locked: false
+- name: OG_IMAGE_CLIENT_REF
+  display_title: 'OG Image Client Reference'
+  description: 'Token used to block unauthorized access to OG images'
+  value: ''
+  locked: false
+  type: secret
+# ------- End of OG Image Related Config ------- #
+
+## ------ Configs added for Google OAuth ------ ##
+- name: GOOGLE_OAUTH_CLIENT_ID
+  display_title: 'Google OAuth Client ID'
+  value:
+  locked: false
+  description: 'Google OAuth Client ID for email authentication'
+- name: GOOGLE_OAUTH_CLIENT_SECRET
+  display_title: 'Google OAuth Client Secret'
+  value:
+  locked: false
+  description: 'Google OAuth Client Secret for email authentication'
+  type: secret
+- name: GOOGLE_OAUTH_REDIRECT_URI
+  display_title: 'Google OAuth Redirect URI'
+  value:
+  locked: false
+  description: 'The redirect URI configured in your Google OAuth app'
+## ------ End of Configs added for Google OAuth ------ ##
+
+## ------ Configs added for Cloudflare ------ ##
+- name: CLOUDFLARE_API_KEY
+  display_title: 'Cloudflare API Key'
+  value:
+  locked: false
+  description: 'API key for Cloudflare account authentication'
+  type: secret
+- name: CLOUDFLARE_ZONE_ID
+  display_title: 'Cloudflare Zone ID'
+  value:
+  locked: false
+  description: 'Zone ID for the Cloudflare domain'
+## ------ End of Configs added for Cloudflare ------ ##
+
+## ------ Customizations for Customers ------ ##
+- name: WIDGET_TOKEN_EXPIRY
+  display_title: 'Widget Token Expiry'
+  value: 180
+  locked: false
+  description: 'Token expiry in days'
+## ------ End of Customizations for Customers ------ ##

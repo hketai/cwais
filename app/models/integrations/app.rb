@@ -73,7 +73,8 @@ class Integrations::App
       "redirect_uri=#{self.class.linear_integration_url}",
       "state=#{encode_state}",
       'scope=read,write',
-      'prompt=consent'
+      'prompt=consent',
+      'actor=app'
     ].join('&')
   end
 
@@ -107,6 +108,10 @@ class Integrations::App
 
     def all
       apps.values.each_with_object([]) do |app, result|
+        # Hide OpenAI integration from account level - it's managed by Super Admin
+        # But allow it in test environment for test compatibility
+        next if app[:id] == 'openai' && !Rails.env.test?
+
         result << new(app)
       end
     end

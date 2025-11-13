@@ -67,10 +67,13 @@ class Inbox < ApplicationRecord
   has_many :conversations, dependent: :destroy_async
   has_many :messages, dependent: :destroy_async
 
+  has_one :inbox_assignment_policy, dependent: :destroy
+  has_one :assignment_policy, through: :inbox_assignment_policy
   has_one :agent_bot_inbox, dependent: :destroy_async
   has_one :agent_bot, through: :agent_bot_inbox
   has_many :webhooks, dependent: :destroy_async
   has_many :hooks, dependent: :destroy_async, class_name: 'Integrations::Hook'
+  has_many :saturn_inboxes, dependent: :destroy_async
 
   enum sender_name_type: { friendly: 0, professional: 1 }
 
@@ -143,8 +146,12 @@ class Inbox < ApplicationRecord
     channel_type == 'Channel::TwitterProfile'
   end
 
+  def telegram?
+    channel_type == 'Channel::Telegram'
+  end
+
   def whatsapp?
-    channel_type == 'Channel::Whatsapp'
+    channel_type == 'Channel::Whatsapp' || channel_type == 'Channel::WhatsappWeb'
   end
 
   def assignable_agents
@@ -175,7 +182,7 @@ class Inbox < ApplicationRecord
       "#{ENV.fetch('FRONTEND_URL', nil)}/webhooks/sms/#{channel.phone_number.delete_prefix('+')}"
     when 'Channel::Line'
       "#{ENV.fetch('FRONTEND_URL', nil)}/webhooks/line/#{channel.line_channel_id}"
-    when 'Channel::Whatsapp'
+    when 'Channel::Whatsapp', 'Channel::WhatsappWeb'
       "#{ENV.fetch('FRONTEND_URL', nil)}/webhooks/whatsapp/#{channel.phone_number}"
     end
   end
@@ -191,7 +198,7 @@ class Inbox < ApplicationRecord
   end
 
   def apply_sanitization_rules(name)
-    name.gsub(/[\\<>@"!#$%&*+=?^`{|}~]/, '')            # Remove forbidden chars
+    name.gsub(/[\\<>@"!#$%&*+=?^`{|}~:;]/, '')         # Remove forbidden chars
         .gsub(/[\x00-\x1F\x7F]/, ' ')                   # Replace control chars with spaces
         .gsub(/\A[[:punct:]]+|[[:punct:]]+\z/, '')      # Remove leading/trailing punctuation
         .gsub(/\s+/, ' ')                               # Normalize spaces
