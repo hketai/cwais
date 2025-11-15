@@ -77,6 +77,7 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
 
     # For other channels, create inbox in transaction
     ActiveRecord::Base.transaction do
+      validate_inbox_limit!
       @inbox = Current.account.inboxes.build(
         {
           name: inbox_name(channel),
@@ -163,6 +164,18 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController
 
   def fetch_agent_bot
     @agent_bot = AgentBot.find(params[:agent_bot]) if params[:agent_bot]
+  end
+
+  def validate_limit
+    validate_inbox_limit!
+  end
+
+  def validate_inbox_limit!
+    checker = Subscriptions::LimitCheckerService.new(account: Current.account)
+    unless checker.can_add_inbox?
+      render_payment_required('Inbox limiti aşıldı. Lütfen aboneliğinizi yükseltin.')
+      return
+    end
   end
 
   def validate_whatsapp_cloud_channel

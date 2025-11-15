@@ -9,7 +9,6 @@ import { useI18n } from 'vue-i18n';
 import { useStorage } from '@vueuse/core';
 import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
 import { vOnClickOutside } from '@vueuse/components';
-import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarGroup from './SidebarGroup.vue';
@@ -922,6 +921,12 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.BILLING'),
           icon: 'i-lucide-credit-card',
           to: accountScopedRoute('billing_settings_index'),
+        },
+        {
+          name: 'Settings Subscriptions',
+          label: 'Abonelikler',
+          icon: 'i-lucide-crown',
+          to: accountScopedRoute('subscriptions_index'),
         },
       ],
     },
