@@ -18,6 +18,7 @@ class Messages::MessageBuilder
   end
 
   def perform
+    validate_message_limit!
     @message = @conversation.messages.build(message_params)
     process_attachments
     process_emails
@@ -172,6 +173,13 @@ class Messages::MessageBuilder
 
   def should_process_email_content?
     email_inbox? && !@private && @message.content.present?
+  end
+
+  def validate_message_limit!
+    checker = Subscriptions::LimitCheckerService.new(account: @account)
+    checker.validate_message_creation!
+  rescue Exceptions::LimitExceeded => e
+    raise StandardError, 'Mesaj limiti aşıldı. Lütfen aboneliğinizi yükseltin.'
   end
 
   def build_email_attributes
