@@ -316,10 +316,12 @@ Rails.application.routes.draw do
                 post :add_participant_to_meeting
               end
             end
-            resource :shopify, controller: 'shopify', only: [:destroy] do
+            resource :shopify, controller: 'shopify', only: [:show, :destroy] do
               collection do
                 post :auth
+                post :connect
                 get :orders
+                get :test
               end
             end
             resource :linear, controller: 'linear', only: [] do

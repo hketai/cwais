@@ -11,7 +11,7 @@ import AssistantWorkingHoursIndex from './assistants/workingHours/Index.vue';
 import AssistantHandoffIndex from './assistants/handoff/Index.vue';
 import DocumentsIndex from './documents/Index.vue';
 import ResponsesIndex from './responses/Index.vue';
-import CustomToolsIndex from './tools/Index.vue';
+import IntegrationsIndex from './integrations/Index.vue';
 
 export const routes = [
   {
@@ -167,9 +167,9 @@ export const routes = [
     },
   },
   {
-    path: frontendURL('accounts/:accountId/saturn/tools'),
-    component: CustomToolsIndex,
-    name: 'saturn_tools_index',
+    path: frontendURL('accounts/:accountId/saturn/integrations'),
+    component: IntegrationsIndex,
+    name: 'saturn_integrations_index',
     meta: {
       permissions: ['administrator', 'agent'],
       featureFlag: FEATURE_FLAGS.SATURN,

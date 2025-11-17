@@ -470,9 +470,9 @@ const menuItems = computed(() => {
           to: accountScopedRoute('saturn_responses_index'),
         },
         {
-          name: 'Tools',
-          label: t('SIDEBAR.SATURN_TOOLS'),
-          to: accountScopedRoute('saturn_tools_index'),
+          name: 'Integrations',
+          label: t('SIDEBAR.SATURN_INTEGRATIONS'),
+          to: accountScopedRoute('saturn_integrations_index'),
         },
       ],
     },
