@@ -86,10 +86,10 @@ export default {
   computed: {
     ...mapGetters({ globalConfig: 'globalConfig/get' }),
     showGoogleOAuth() {
-      return Boolean(window.chatwootConfig.googleOAuthClientId);
+      return Boolean(window.saturnConfig.googleOAuthClientId);
     },
     showSignupLink() {
-      return parseBoolean(window.chatwootConfig.signupEnabled);
+      return parseBoolean(window.saturnConfig.signupEnabled);
     },
     showSamlLogin() {
       return this.globalConfig.isEnterprise;

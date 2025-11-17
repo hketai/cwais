@@ -100,7 +100,7 @@ export default {
       return '';
     },
     showGoogleOAuth() {
-      return Boolean(window.chatwootConfig.googleOAuthClientId);
+      return Boolean(window.saturnConfig.googleOAuthClientId);
     },
     isFormValid() {
       return !this.v$.$invalid && this.hasAValidCaptcha;

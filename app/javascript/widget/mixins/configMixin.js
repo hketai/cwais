@@ -6,13 +6,13 @@ export default {
       );
     },
     hasAConnectedAgentBot() {
-      return !!window.chatwootWebChannel.hasAConnectedAgentBot;
+      return !!window.saturnWebChannel.hasAConnectedAgentBot;
     },
     inboxAvatarUrl() {
-      return window.chatwootWebChannel.avatarUrl;
+      return window.saturnWebChannel.avatarUrl;
     },
     channelConfig() {
-      return window.chatwootWebChannel;
+      return window.saturnWebChannel;
     },
     hasEmojiPickerEnabled() {
       return this.channelConfig.enabledFeatures.includes('emoji_picker');
@@ -24,11 +24,11 @@ export default {
       return this.channelConfig.enabledFeatures.includes('end_conversation');
     },
     preChatFormEnabled() {
-      return window.chatwootWebChannel.preChatFormEnabled;
+      return window.saturnWebChannel.preChatFormEnabled;
     },
     preChatFormOptions() {
       let preChatMessage = '';
-      const options = window.chatwootWebChannel.preChatFormOptions || {};
+      const options = window.saturnWebChannel.preChatFormOptions || {};
       preChatMessage = options.pre_chat_message;
       const { pre_chat_fields: preChatFields = [] } = options;
       return {

@@ -16,7 +16,7 @@ const DEFAULT_REPLY_TIME = 'in_a_few_minutes';
 export function useAvailability(agents = []) {
   const availableAgents = toRef(agents);
 
-  const channelConfig = computed(() => window.chatwootWebChannel || {});
+  const channelConfig = computed(() => window.saturnWebChannel || {});
 
   const inboxConfig = computed(() => ({
     workingHours: channelConfig.value.workingHours?.map(useCamelCase) || [],

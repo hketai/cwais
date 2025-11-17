@@ -1,8 +1,8 @@
 <script setup>
-import { h, computed, onMounted } from 'vue';
+import { h, computed, onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { provideSidebarContext } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
-import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
@@ -10,14 +10,13 @@ import { useStorage } from '@vueuse/core';
 import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
 import { vOnClickOutside } from '@vueuse/components';
 
-import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarGroup from './SidebarGroup.vue';
 import SidebarProfileMenu from './SidebarProfileMenu.vue';
 import ChannelLeaf from './ChannelLeaf.vue';
 import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
 import Logo from 'next/icon/Logo.vue';
-import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
 import SaturnIcon from 'dashboard/components-next/icon/SaturnIcon.vue';
+import subscriptionsAPI from 'dashboard/api/subscriptions';
 
 const props = defineProps({
   isMobileSidebarOpen: {
@@ -33,10 +32,10 @@ const emit = defineEmits([
   'closeMobileSidebar',
 ]);
 
-const { accountScopedRoute } = useAccount();
+const { accountScopedRoute, accountId } = useAccount();
 const store = useStore();
-const searchShortcut = useKbd([`$mod`, 'k']);
 const { t } = useI18n();
+const router = useRouter();
 
 const toggleShortcutModalFn = show => {
   if (show) {
@@ -73,6 +72,29 @@ const conversationCustomViews = useMapGetter(
   'customViews/getConversationCustomViews'
 );
 
+const currentSubscription = ref(null);
+const loading = ref(false);
+
+const fetchCurrentSubscription = async () => {
+  try {
+    loading.value = true;
+    const response = await subscriptionsAPI.current();
+    currentSubscription.value = response.data;
+  } catch (err) {
+    // Silently fail if no subscription
+    currentSubscription.value = null;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const goToSubscriptionPage = () => {
+  router.push({
+    name: 'subscriptions_index',
+    params: { accountId: accountId.value },
+  });
+};
+
 onMounted(() => {
   store.dispatch('labels/get');
   store.dispatch('inboxes/get');
@@ -81,6 +103,12 @@ onMounted(() => {
   store.dispatch('attributes/get');
   store.dispatch('customViews/get', 'conversation');
   store.dispatch('customViews/get', 'contact');
+  fetchCurrentSubscription();
+});
+
+// Account değiştiğinde subscription'ı yeniden yükle
+watch(accountId, () => {
+  fetchCurrentSubscription();
 });
 
 const sortedInboxes = computed(() =>
@@ -425,7 +453,6 @@ const menuItems = computed(() => {
       icon: h(SaturnIcon, { class: 'size-4' }),
       label: t('SIDEBAR.SATURN'),
       to: accountScopedRoute('saturn_assistants_index'),
-      featureFlag: null,
       children: [
         {
           name: 'Assistants',
@@ -441,6 +468,11 @@ const menuItems = computed(() => {
           name: 'Responses',
           label: t('SIDEBAR.SATURN_RESPONSES'),
           to: accountScopedRoute('saturn_responses_index'),
+        },
+        {
+          name: 'Tools',
+          label: t('SIDEBAR.SATURN_TOOLS'),
+          to: accountScopedRoute('saturn_tools_index'),
         },
       ],
     },
@@ -948,44 +980,13 @@ const menuItems = computed(() => {
       },
     ]"
   >
-    <section class="grid gap-2 mt-2 mb-4">
-      <div class="flex items-center min-w-0 gap-2 px-2">
-        <div class="grid flex-shrink-0 size-6 place-content-center">
-          <Logo class="size-4" />
-        </div>
-        <div class="flex-shrink-0 w-px h-3 bg-n-strong" />
-        <SidebarAccountSwitcher
-          class="flex-grow min-w-0 -mx-1"
-          @show-create-account-modal="emit('showCreateAccountModal')"
-        />
+    <!-- Logo - Full Width -->
+    <section class="px-4 py-4">
+      <div class="flex justify-center items-center w-full">
+        <Logo class="w-full h-auto max-h-12" />
       </div>
-      <div class="flex gap-2 px-2">
-        <RouterLink
-          :to="{ name: 'search' }"
-          class="flex items-center w-full gap-2 px-2 py-1 rounded-lg h-7 outline outline-1 outline-n-weak bg-n-solid-3 dark:bg-n-black/30"
-        >
-          <span class="flex-shrink-0 i-lucide-search size-4 text-n-slate-11" />
-          <span class="flex-grow text-left">
-            {{ t('COMBOBOX.SEARCH_PLACEHOLDER') }}
-          </span>
-          <span
-            class="hidden tracking-wide pointer-events-none select-none text-n-slate-10"
-          >
-            {{ searchShortcut }}
-          </span>
-        </RouterLink>
-        <ComposeConversation align-position="right">
-          <template #trigger="{ toggle }">
-            <Button
-              icon="i-lucide-pen-line"
-              color="slate"
-              size="sm"
-              class="!h-7 !bg-n-solid-3 dark:!bg-n-black/30 !outline-n-weak !text-n-slate-11"
-              @click="toggle"
-            />
-          </template>
-        </ComposeConversation>
-      </div>
+      <!-- Çizgi -->
+      <div class="w-full h-px bg-n-weak mt-4" />
     </section>
     <nav class="grid flex-grow gap-2 px-2 pb-5 overflow-y-scroll no-scrollbar">
       <ul class="flex flex-col gap-1.5 m-0 list-none">
@@ -996,9 +997,25 @@ const menuItems = computed(() => {
         />
       </ul>
     </nav>
+    <!-- En Alt: Switcher, Plan, Account -->
     <section
-      class="p-1 border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)] flex-shrink-0 flex justify-between gap-2 items-center"
+      class="p-2 border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)] flex-shrink-0 flex flex-col gap-2"
     >
+      <!-- Switcher -->
+      <SidebarAccountSwitcher
+        class="w-full"
+        @show-create-account-modal="emit('showCreateAccountModal')"
+      />
+      <!-- Plan -->
+      <button
+        v-if="currentSubscription?.plan"
+        type="button"
+        class="text-xs font-semibold leading-4 truncate text-n-iris-11 hover:text-n-iris-12 cursor-pointer transition-colors w-full text-left px-2"
+        @click="goToSubscriptionPage"
+      >
+        {{ currentSubscription.plan.name }}
+      </button>
+      <!-- Account -->
       <SidebarProfileMenu
         @open-key-shortcut-modal="emit('openKeyShortcutModal')"
       />

@@ -84,7 +84,7 @@ export default {
   methods: {
     async copyLinkToMessage() {
       const fullConversationURL =
-        window.chatwootConfig.hostURL +
+        window.saturnConfig.hostURL +
         frontendURL(
           conversationUrl({
             id: this.conversationId,

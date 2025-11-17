@@ -48,7 +48,7 @@ export default {
       return this.inbox.provider_config?.source === 'embedded_signup';
     },
     whatsappAppId() {
-      return window.chatwootConfig?.whatsappAppId;
+      return window.saturnConfig?.whatsappAppId;
     },
   },
   watch: {
