@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_11_13_100737) do
+ActiveRecord::Schema[7.1].define(version: 2025_11_14_201625) do
   # These extensions should be enabled to support this database
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
@@ -38,6 +38,24 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_13_100737) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_account_saml_settings_on_account_id"
+  end
+
+  create_table "account_subscriptions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "subscription_plan_id", null: false
+    t.string "status", default: "active", null: false
+    t.string "iyzico_subscription_id"
+    t.datetime "started_at", null: false
+    t.datetime "expires_at"
+    t.datetime "canceled_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "metadata"
+    t.index ["account_id", "status"], name: "index_account_subscriptions_on_account_id_and_status"
+    t.index ["account_id"], name: "index_account_subscriptions_on_account_id"
+    t.index ["iyzico_subscription_id"], name: "index_account_subscriptions_on_iyzico_subscription_id"
+    t.index ["status"], name: "index_account_subscriptions_on_status"
+    t.index ["subscription_plan_id"], name: "index_account_subscriptions_on_subscription_plan_id"
   end
 
   create_table "account_users", force: :cascade do |t|
@@ -1243,6 +1261,27 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_13_100737) do
     t.index ["account_id"], name: "index_sla_policies_on_account_id"
   end
 
+  create_table "subscription_plans", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.decimal "price", precision: 10, scale: 2, default: "0.0"
+    t.boolean "is_free", default: false, null: false
+    t.boolean "is_active", default: true, null: false
+    t.integer "message_limit", default: 0
+    t.integer "conversation_limit", default: 0
+    t.integer "position", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "features"
+    t.integer "agent_limit"
+    t.integer "inbox_limit"
+    t.string "billing_cycle"
+    t.integer "trial_days"
+    t.index ["is_active"], name: "index_subscription_plans_on_is_active"
+    t.index ["is_free"], name: "index_subscription_plans_on_is_free"
+    t.index ["position"], name: "index_subscription_plans_on_position"
+  end
+
   create_table "taggings", id: :serial, force: :cascade do |t|
     t.integer "tag_id"
     t.string "taggable_type"
@@ -1357,6 +1396,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_13_100737) do
     t.index ["inbox_id"], name: "index_working_hours_on_inbox_id"
   end
 
+  add_foreign_key "account_subscriptions", "accounts"
+  add_foreign_key "account_subscriptions", "subscription_plans"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "channel_whatsapp_webs", "accounts"
