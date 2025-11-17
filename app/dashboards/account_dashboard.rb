@@ -34,7 +34,12 @@ class AccountDashboard < Administrate::BaseDashboard
     locale: Field::Select.with_options(collection: LANGUAGES_CONFIG.map { |_x, y| y[:iso_639_1_code] }),
     status: Field::Select.with_options(collection: [%w[Active active], %w[Suspended suspended]]),
     account_users: Field::HasMany,
-    custom_attributes: Field::String
+    custom_attributes: Field::String,
+    openai_api_key: Field::String.with_options(secret: true),
+    subscription_plan_id: Field::Select.with_options(
+      collection: proc { SubscriptionPlan.active.ordered.map { |p| [p.name, p.id] } }
+    ),
+    account_subscriptions: Field::HasMany
   }.merge(enterprise_attribute_types).freeze
 
   # COLLECTION_ATTRIBUTES
@@ -70,6 +75,8 @@ class AccountDashboard < Administrate::BaseDashboard
     status
     conversations
     account_users
+    account_subscriptions
+    openai_api_key
   ] + enterprise_show_page_attributes).freeze
 
   # FORM_ATTRIBUTES
@@ -87,6 +94,8 @@ class AccountDashboard < Administrate::BaseDashboard
     name
     locale
     status
+    subscription_plan_id
+    openai_api_key
   ] + enterprise_form_attributes).freeze
 
   # COLLECTION_FILTERS
@@ -117,7 +126,7 @@ class AccountDashboard < Administrate::BaseDashboard
   # to prevent an error from being raised (wrong number of arguments)
   # Reference: https://github.com/thoughtbot/administrate/pull/2356/files#diff-4e220b661b88f9a19ac527c50d6f1577ef6ab7b0bed2bfdf048e22e6bfa74a05R204
   def permitted_attributes(action)
-    attrs = super + [limits: {}]
+    attrs = super + [{ limits: {} }, :subscription_plan_id]
 
     # Add manually_managed_features to permitted attributes only for Chatwoot Cloud
     attrs << { manually_managed_features: [] } if ChatwootApp.chatwoot_cloud?

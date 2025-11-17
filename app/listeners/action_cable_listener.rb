@@ -33,6 +33,8 @@ class ActionCableListener < BaseListener
   def message_created(event)
     message, account = extract_message_and_account(event)
     conversation = message.conversation
+    # Include inbox members AND account administrators to ensure messages are broadcasted
+    # even if inbox has no members assigned
     tokens = user_tokens(account, conversation.inbox.members) + contact_tokens(conversation.contact_inbox, message)
 
     broadcast(account, tokens, MESSAGE_CREATED, message.push_event_data)

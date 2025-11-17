@@ -14,7 +14,16 @@ class ConversationBuilder
   end
 
   def create_new_conversation
+    validate_conversation_limit!
     ::Conversation.create!(conversation_params)
+  end
+
+  def validate_conversation_limit!
+    account = @contact_inbox.inbox.account
+    checker = Subscriptions::LimitCheckerService.new(account: account)
+    checker.validate_conversation_creation!
+  rescue Exceptions::LimitExceeded => e
+    raise StandardError, 'Konuşma limiti aşıldı. Lütfen aboneliğinizi yükseltin.'
   end
 
   def conversation_params

@@ -70,7 +70,33 @@ Rails.application.routes.draw do
             resources :custom_tools
             resources :documents, only: [:index, :show, :create, :destroy]
           end
+          namespace :saturn do
+            resources :assistants do
+              member do
+                post :playground
+                put :update_working_hours
+                put :update_handoff_settings
+              end
+              resources :inboxes, only: [:index, :create, :destroy], param: :inbox_id
+              resources :scenarios
+              resources :responses, only: [:index, :create]
+              resources :documents, only: [:index, :show, :create, :update, :destroy]
+            end
+            resources :responses, only: [:index, :show, :update, :destroy], param: :id
+            resources :documents, only: [:index], param: :id
+            resources :custom_tools
+          end
           resource :saml_settings, only: [:show, :create, :update, :destroy]
+          resources :subscription_plans, only: [:index, :show]
+          resources :subscriptions, only: [:index, :show, :create, :update, :destroy] do
+            collection do
+              get :current
+              get :limits
+            end
+            member do
+              post :cancel
+            end
+          end
           resources :agent_bots, only: [:index, :create, :show, :update, :destroy] do
             delete :avatar, on: :member
             post :reset_access_token, on: :member
@@ -258,6 +284,17 @@ Rails.application.routes.draw do
 
           namespace :whatsapp do
             resource :authorization, only: [:create]
+          end
+
+          namespace :whatsapp_web do
+            resources :channels, only: [:create, :show, :update, :destroy] do
+              member do
+                get :qr_code
+                get :status
+                post :start
+                post :stop
+              end
+            end
           end
 
           resources :webhooks, only: [:index, :create, :update, :destroy]
@@ -520,6 +557,7 @@ Rails.application.routes.draw do
   post 'webhooks/sms/:phone_number', to: 'webhooks/sms#process_payload'
   get 'webhooks/whatsapp/:phone_number', to: 'webhooks/whatsapp#verify'
   post 'webhooks/whatsapp/:phone_number', to: 'webhooks/whatsapp#process_payload'
+  post 'webhooks/whatsapp_web', to: 'webhooks/whatsapp_web#process_payload'
   get 'webhooks/instagram', to: 'webhooks/instagram#verify'
   post 'webhooks/instagram', to: 'webhooks/instagram#events'
 
@@ -578,6 +616,9 @@ Rails.application.routes.draw do
         post :seed, on: :member
         post :reset_cache, on: :member
       end
+      resources :subscription_plans, only: [:index, :new, :create, :show, :edit, :update, :destroy]
+      # Account subscriptions are managed from Account show page, not as a separate resource
+      # resources :account_subscriptions, only: [:index, :new, :create, :show, :edit, :update, :destroy]
       resources :users, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
         delete :avatar, on: :member, action: :destroy_avatar
       end

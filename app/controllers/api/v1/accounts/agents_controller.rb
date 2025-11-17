@@ -94,7 +94,11 @@ class Api::V1::Accounts::AgentsController < Api::V1::Accounts::BaseController
   end
 
   def validate_limit
-    render_payment_required('Account limit exceeded. Please purchase more licenses') unless can_add_agent?
+    checker = Subscriptions::LimitCheckerService.new(account: Current.account)
+    unless checker.can_add_agent?
+      render_payment_required('Ajan limiti aşıldı. Lütfen aboneliğinizi yükseltin.')
+      return
+    end
   end
 
   def available_agent_count
@@ -102,7 +106,8 @@ class Api::V1::Accounts::AgentsController < Api::V1::Accounts::BaseController
   end
 
   def can_add_agent?
-    available_agent_count.positive?
+    checker = Subscriptions::LimitCheckerService.new(account: Current.account)
+    checker.can_add_agent?
   end
 
   def delete_user_record(agent)
