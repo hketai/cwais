@@ -14,11 +14,13 @@ import {
 import ChannelName from './components/ChannelName.vue';
 import ChannelIcon from 'next/icon/ChannelIcon.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import { useRouter } from 'vue-router';
 
 const getters = useStoreGetters();
 const store = useStore();
 const { t } = useI18n();
 const { isAdmin } = useAdmin();
+const router = useRouter();
 
 const showDeletePopup = ref(false);
 const selectedInbox = ref({});
@@ -69,6 +71,53 @@ const confirmDeletion = () => {
 const openDelete = inbox => {
   showDeletePopup.value = true;
   selectedInbox.value = inbox;
+};
+
+const isWhatsappWeb = inbox => inbox.channel_type === 'Channel::WhatsappWeb';
+
+const formatPhoneNumber = number => {
+  if (!number) return '';
+  if (number.startsWith('+')) return number;
+  return `+${number}`;
+};
+
+const whatsappWebStatusMeta = status => {
+  const map = {
+    connected: {
+      label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.CONNECTED'),
+      class: 'bg-g-success-subtle text-g-success',
+    },
+    connecting: {
+      label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.CONNECTING'),
+      class: 'bg-n-warning-subtle text-n-warning',
+    },
+    disconnected: {
+      label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.DISCONNECTED'),
+      class: 'bg-n-ruby-subtle text-n-ruby',
+    },
+    disconnected_qr_expired: {
+      label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.QR_EXPIRED'),
+      class: 'bg-n-ruby-subtle text-n-ruby',
+    },
+  };
+
+  return (
+    map[status] || {
+      label: t('INBOX_MGMT.WHATSAPP_WEB.STATUS.UNKNOWN'),
+      class: 'bg-n-muted-subtle text-n-slate-11',
+    }
+  );
+};
+
+const shouldShowWhatsappReconnect = inbox =>
+  isWhatsappWeb(inbox) && inbox.whatsapp_web_status !== 'connected';
+
+const handleWhatsappWebReconnect = inbox => {
+  router.push({
+    name: 'settings_inbox_show',
+    params: { inboxId: inbox.id },
+    query: { reconnect: 'whatsapp_web' },
+  });
 };
 </script>
 
@@ -126,6 +175,41 @@ const openDelete = inbox => {
                     :channel-type="inbox.channel_type"
                     :medium="inbox.medium"
                   />
+                  <div
+                    v-if="isWhatsappWeb(inbox)"
+                    class="mt-1 flex flex-wrap items-center gap-2"
+                  >
+                    <span
+                      class="px-2 py-0.5 text-xs font-medium rounded-full"
+                      :class="
+                        whatsappWebStatusMeta(inbox.whatsapp_web_status).class
+                      "
+                    >
+                      {{
+                        whatsappWebStatusMeta(inbox.whatsapp_web_status).label
+                      }}
+                    </span>
+                    <span
+                      v-if="formatPhoneNumber(inbox.whatsapp_web_phone_number)"
+                      class="text-xs text-n-slate-11"
+                    >
+                      {{
+                        $t('INBOX_MGMT.WHATSAPP_WEB.CONNECTED_TO', {
+                          phone: formatPhoneNumber(
+                            inbox.whatsapp_web_phone_number
+                          ),
+                        })
+                      }}
+                    </span>
+                    <Button
+                      v-if="shouldShowWhatsappReconnect(inbox) && isAdmin"
+                      icon="i-lucide-qr-code"
+                      xs
+                      slate
+                      :label="$t('INBOX_MGMT.WHATSAPP_WEB.RECONNECT')"
+                      @click="handleWhatsappWebReconnect(inbox)"
+                    />
+                  </div>
                 </div>
               </div>
             </td>

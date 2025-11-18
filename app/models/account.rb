@@ -30,6 +30,9 @@ class Account < ApplicationRecord
   include Featurable
   include CacheKeys
 
+  # Virtual attribute for Administrate form
+  attr_accessor :subscription_plan_id
+
   SETTINGS_PARAMS_SCHEMA = {
     'type': 'object',
     'properties':
@@ -103,6 +106,8 @@ class Account < ApplicationRecord
   has_many :saturn_assistant_responses, dependent: :destroy_async, class_name: 'Saturn::AssistantResponse'
   has_many :saturn_documents, dependent: :destroy_async, class_name: 'Saturn::Document'
   has_many :saturn_custom_tools, dependent: :destroy_async, class_name: 'Saturn::CustomTool'
+  has_many :account_subscriptions, dependent: :destroy_async
+  has_many :subscription_plans, through: :account_subscriptions
 
   has_one_attached :contacts_export
 
@@ -151,10 +156,48 @@ class Account < ApplicationRecord
   end
 
   def usage_limits
-    {
-      agents: ChatwootApp.max_limit.to_i,
-      inboxes: ChatwootApp.max_limit.to_i
-    }
+    if current_subscription.present?
+      plan = current_subscription.subscription_plan
+      {
+        agents: plan.unlimited_agents? ? ChatwootApp.max_limit.to_i : (plan.agent_limit || 0).to_i,
+        inboxes: plan.unlimited_inboxes? ? ChatwootApp.max_limit.to_i : (plan.inbox_limit || 0).to_i,
+        messages: plan.unlimited_messages? ? ChatwootApp.max_limit.to_i : plan.message_limit,
+        conversations: plan.unlimited_conversations? ? ChatwootApp.max_limit.to_i : plan.conversation_limit
+      }
+    else
+      {
+        agents: ChatwootApp.max_limit.to_i,
+        inboxes: ChatwootApp.max_limit.to_i,
+        messages: ChatwootApp.max_limit.to_i,
+        conversations: ChatwootApp.max_limit.to_i
+      }
+    end
+  end
+
+  def current_subscription
+    # Optimize: Use includes to eager load subscription_plan and avoid N+1 queries
+    # Only eager load if association is not already loaded
+    if association(:account_subscriptions).loaded?
+      account_subscriptions.current.first
+    else
+      account_subscriptions.includes(:subscription_plan).current.first
+    end
+  end
+
+  def has_active_subscription?
+    current_subscription.present? && current_subscription.active?
+  end
+
+  def subscription_plan
+    current_subscription&.subscription_plan
+  end
+
+  def subscription_plan_id
+    @subscription_plan_id || current_subscription&.subscription_plan_id
+  end
+
+  def subscription_plan_id=(plan_id)
+    @subscription_plan_id = plan_id.to_i if plan_id.present?
   end
 
   def locale_english_name

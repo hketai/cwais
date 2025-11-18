@@ -32,7 +32,7 @@ class Saturn::Assistant < ApplicationRecord
   has_many :messages, as: :sender, dependent: :nullify
 
   # Config accessors
-  store_accessor :config, :temperature, :feature_faq, :feature_memory, :product_name
+  store_accessor :config, :temperature, :feature_faq, :feature_memory, :feature_citation, :product_name, :working_hours, :handoff_config
 
   # Validations - different order and approach
   validates :account_id, presence: true
