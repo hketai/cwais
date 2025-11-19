@@ -1,5 +1,8 @@
 # Incoming Message Service for WhatsApp Web
 # Processes messages received from WhatsApp Web client
+require 'stringio'
+require 'base64'
+
 class WhatsappWeb::IncomingMessageService
   pattr_initialize [:channel!, :message_data!]
 
@@ -207,15 +210,54 @@ class WhatsappWeb::IncomingMessageService
     message_data[:attachments].each do |attachment_data|
       attachment = @message.attachments.new(
         account_id: channel.account_id,
-        file_type: determine_file_type(attachment_data[:mimetype]),
-        external_url: attachment_data[:url]
+        file_type: determine_file_type(attachment_data[:mimetype])
       )
 
-      # Download and attach file if URL is provided
-      download_and_attach_file(attachment, attachment_data) if attachment_data[:url].present?
+      # Handle base64 data from WhatsApp Web
+      if attachment_data[:data].present?
+        attach_from_base64(attachment, attachment_data)
+      # Handle URL if provided (for other sources)
+      elsif attachment_data[:url].present?
+        attachment.external_url = attachment_data[:url]
+        download_and_attach_file(attachment, attachment_data)
+      end
 
       attachment.save!
     end
+  end
+
+  def attach_from_base64(attachment, attachment_data)
+    Rails.logger.info "[WHATSAPP_WEB] 📎 Processing base64 attachment: mimetype=#{attachment_data[:mimetype]}, filename=#{attachment_data[:filename]}"
+    
+    # WhatsApp Web.js returns base64 data, decode it
+    base64_data = attachment_data[:data].to_s
+    
+    # Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
+    base64_data = base64_data.sub(/^data:[^;]+;base64,/, '')
+    
+    # Decode base64 data
+    decoded_data = Base64.decode64(base64_data)
+    
+    Rails.logger.info "[WHATSAPP_WEB] 📎 Decoded data size: #{decoded_data.bytesize} bytes"
+    
+    # Create a temporary file-like object
+    file = StringIO.new(decoded_data)
+    
+    # Determine filename
+    filename = attachment_data[:filename] || generate_filename(attachment_data[:mimetype])
+    
+    # Attach file
+    attachment.file.attach(
+      io: file,
+      filename: filename,
+      content_type: attachment_data[:mimetype] || 'application/octet-stream'
+    )
+    
+    Rails.logger.info "[WHATSAPP_WEB] ✅ Attached file from base64: #{filename}, mimetype: #{attachment_data[:mimetype]}, size: #{decoded_data.bytesize} bytes"
+  rescue StandardError => e
+    Rails.logger.error "[WHATSAPP_WEB] ❌ Base64 attachment error: #{e.class.name}: #{e.message}"
+    Rails.logger.error "[WHATSAPP_WEB] Backtrace: #{e.backtrace.first(10).join("\n")}"
+    raise
   end
 
   def download_and_attach_file(attachment, attachment_data)
@@ -227,6 +269,20 @@ class WhatsappWeb::IncomingMessageService
     )
   rescue StandardError => e
     Rails.logger.error "[WHATSAPP_WEB] File download error: #{e.message}"
+  end
+
+  def generate_filename(mimetype)
+    extension = case mimetype
+                when /^image\//
+                  mimetype.split('/').last
+                when /^video\//
+                  mimetype.split('/').last
+                when /^audio\//
+                  mimetype.split('/').last
+                else
+                  'bin'
+                end
+    "whatsapp_media_#{Time.current.to_i}.#{extension}"
   end
 
   def normalize_phone_number(phone)
@@ -280,13 +336,11 @@ class WhatsappWeb::IncomingMessageService
   end
 
   def determine_content_type
-    return 'text' if message_data[:type] == 'text'
-    return 'image' if message_data[:type] == 'image'
-    return 'audio' if message_data[:type] == 'audio'
-    return 'video' if message_data[:type] == 'video'
-    return 'document' if message_data[:type] == 'document'
-    return 'location' if message_data[:type] == 'location'
-
+    # Message content_type is always 'text' for WhatsApp Web
+    # Media files are handled as attachments, not content_type
+    # Valid content_type values: text, input_text, input_textarea, input_email, 
+    # input_select, cards, form, article, incoming_email, input_csat, 
+    # integrations, sticker, voice_call
     'text'
   end
 
