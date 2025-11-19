@@ -43,9 +43,16 @@ class WhatsappWeb::IncomingMessageService
       set_conversation
       Rails.logger.info "[WHATSAPP_WEB] Conversation set: ID=#{@conversation.id}"
 
+      # Check if body contains vCard data and parse it BEFORE creating message
+      if message_data[:vcards].blank? && message_data[:body].to_s.include?('BEGIN:VCARD')
+        Rails.logger.info "[WHATSAPP_WEB] 📇 vCard detected in body, parsing..."
+        parse_vcard_from_body
+      end
+
       create_message
       Rails.logger.info "[WHATSAPP_WEB] Message created: ID=#{@message.id}" if @message
 
+      attach_contacts if message_data[:vcards].present?
       attach_files if message_data[:attachments].present?
     end
 
@@ -193,8 +200,17 @@ class WhatsappWeb::IncomingMessageService
     # Tüm kontroller geçildi → Yeni mesaj oluştur
     Rails.logger.info "[WHATSAPP_WEB] ✅ Creating new incoming message (fromMe=#{from_me})"
 
+    # For vCard messages, don't set content (will be shown as contact bubble)
+    # Also check if body contains vCard data even if vcards array is not present
+    has_vcard_in_body = message_data[:body].to_s.include?('BEGIN:VCARD')
+    message_content = if message_data[:vcards].present? || has_vcard_in_body
+                        nil
+                      else
+                        message_data[:body] || message_data[:caption]
+                      end
+
     @message = @conversation.messages.create!(
-      content: message_data[:body] || message_data[:caption],
+      content: message_content,
       account_id: channel.account_id,
       inbox_id: channel.inbox.id,
       message_type: from_me ? :outgoing : :incoming,
@@ -350,6 +366,109 @@ class WhatsappWeb::IncomingMessageService
     return :video if mimetype&.start_with?('video/')
 
     :file
+  end
+
+  def parse_vcard_from_body
+    vcard_string = message_data[:body].to_s
+    return unless vcard_string.include?('BEGIN:VCARD')
+
+    # Parse vCard string
+    display_name = ''
+    first_name = ''
+    last_name = ''
+    phone_number = ''
+
+    vcard_string.split(/\r?\n/).each do |line|
+      upper_line = line.upcase
+      
+      # Extract FN (Full Name)
+      if upper_line.start_with?('FN:')
+        display_name = line[3..-1].to_s.strip
+      end
+      
+      # Extract N (Name - structured)
+      if upper_line.start_with?('N:')
+        name_parts = line[2..-1].to_s.split(';')
+        last_name = (name_parts[0] || '').strip
+        first_name = (name_parts[1] || '').strip
+      end
+      
+      # Extract TEL (Phone Number)
+      if upper_line.start_with?('TEL')
+        tel_match = line.match(/TEL[^:]*:(.+)/i)
+        if tel_match
+          phone = tel_match[1].to_s.strip
+          phone_number = phone.gsub(/[^\d+]/, '')
+        end
+      end
+    end
+
+    # Use display name if first/last name are empty
+    if first_name.blank? && last_name.blank? && display_name.present?
+      name_parts = display_name.split(/\s+/)
+      first_name = name_parts[0] || ''
+      last_name = name_parts[1..-1].join(' ') || ''
+    end
+
+    # Ensure phone number starts with +
+    phone_number = phone_number.start_with?('+') ? phone_number : "+#{phone_number}" if phone_number.present?
+
+    # Add to vcards array
+    message_data[:vcards] ||= []
+    message_data[:vcards] << {
+      displayName: display_name,
+      firstName: first_name,
+      lastName: last_name,
+      phoneNumber: phone_number,
+      vcard: vcard_string
+    }
+
+    Rails.logger.info "[WHATSAPP_WEB] 📇 Parsed vCard from body: name=#{display_name}, phone=#{phone_number}"
+  end
+
+  def attach_contacts
+    message_data[:vcards].each do |vcard_data|
+      # Extract contact information from vCard
+      display_name = vcard_data[:displayName] || vcard_data['displayName'] || ''
+      first_name = vcard_data[:firstName] || vcard_data['firstName'] || ''
+      last_name = vcard_data[:lastName] || vcard_data['lastName'] || ''
+      phone_number = vcard_data[:phoneNumber] || vcard_data['phoneNumber'] || ''
+      
+      # Parse phone number from vCard string if not provided
+      if phone_number.blank? && vcard_data[:vcard].present?
+        vcard_string = vcard_data[:vcard] || vcard_data['vcard']
+        phone_match = vcard_string.match(/TEL[^:]*:(.+)/i)
+        if phone_match
+          phone_number = phone_match[1].to_s.gsub(/[^\d+]/, '')
+        end
+      end
+      
+      # Use display name if first/last name are empty
+      if first_name.blank? && last_name.blank? && display_name.present?
+        name_parts = display_name.split(/\s+/)
+        first_name = name_parts[0] || ''
+        last_name = name_parts[1..-1].join(' ') || ''
+      end
+      
+      # Ensure phone number starts with +
+      phone_number = phone_number.start_with?('+') ? phone_number : "+#{phone_number}" if phone_number.present?
+      
+      Rails.logger.info "[WHATSAPP_WEB] 📇 Attaching contact: name=#{display_name}, phone=#{phone_number}"
+      
+      @message.attachments.create!(
+        account_id: channel.account_id,
+        file_type: :contact,
+        fallback_title: phone_number.presence || display_name.presence || 'Contact',
+        meta: {
+          firstName: first_name,
+          lastName: last_name
+        }.compact
+      )
+    end
+  rescue StandardError => e
+    Rails.logger.error "[WHATSAPP_WEB] ❌ Contact attachment error: #{e.class.name}: #{e.message}"
+    Rails.logger.error "[WHATSAPP_WEB] Backtrace: #{e.backtrace.first(10).join("\n")}"
+    raise
   end
 
   def conversation_params

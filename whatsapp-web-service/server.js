@@ -16,6 +16,56 @@ const cors = require('cors');
 const axios = require('axios');
 require('dotenv').config();
 
+// Parse vCard string to extract contact information
+function parseVCard(vcardString) {
+  if (!vcardString || typeof vcardString !== 'string') {
+    return { displayName: '', firstName: '', lastName: '', phoneNumber: '' };
+  }
+
+  const lines = vcardString.split(/\r?\n/);
+  const result = {
+    displayName: '',
+    firstName: '',
+    lastName: '',
+    phoneNumber: ''
+  };
+
+  for (const line of lines) {
+    const upperLine = line.toUpperCase();
+    
+    // Extract FN (Full Name)
+    if (upperLine.startsWith('FN:')) {
+      result.displayName = line.substring(3).trim();
+    }
+    
+    // Extract N (Name - structured)
+    if (upperLine.startsWith('N:')) {
+      const nameParts = line.substring(2).split(';');
+      result.lastName = (nameParts[0] || '').trim();
+      result.firstName = (nameParts[1] || '').trim();
+    }
+    
+    // Extract TEL (Phone Number)
+    if (upperLine.startsWith('TEL')) {
+      const telMatch = line.match(/TEL[^:]*:(.+)/);
+      if (telMatch) {
+        const phone = telMatch[1].trim();
+        // Remove non-digit characters except +
+        result.phoneNumber = phone.replace(/[^\d+]/g, '');
+      }
+    }
+  }
+
+  // Use displayName if firstName/lastName are empty
+  if (!result.firstName && !result.lastName && result.displayName) {
+    const nameParts = result.displayName.split(/\s+/);
+    result.firstName = nameParts[0] || '';
+    result.lastName = nameParts.slice(1).join(' ') || '';
+  }
+
+  return result;
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -29,6 +79,30 @@ const clients = new Map();
 const qrCodes = new Map();
 // Store processed message IDs per channel to prevent duplicates
 const processedMessageIds = new Map(); // channelId -> Set of message IDs
+
+/**
+ * Clean up expired QR codes
+ * This runs periodically to prevent memory leaks
+ */
+function cleanupExpiredQRCodes() {
+  const now = new Date();
+  let cleanedCount = 0;
+  
+  for (const [channelId, qrData] of qrCodes.entries()) {
+    if (new Date(qrData.expires_at) < now) {
+      qrCodes.delete(channelId);
+      cleanedCount++;
+      console.log(`[CLEANUP] Removed expired QR code for channel ${channelId}`);
+    }
+  }
+  
+  if (cleanedCount > 0) {
+    console.log(`[CLEANUP] Cleaned up ${cleanedCount} expired QR code(s)`);
+  }
+}
+
+// Run cleanup every 1 minute
+setInterval(cleanupExpiredQRCodes, 60 * 1000);
 
 /**
  * Clean up stale session locks
@@ -405,6 +479,53 @@ async function processIncomingMessage(channelId, message) {
       hasBody: !!messageData.body,
       fromMe: messageData.fromMe
     });
+
+    // Handle vCard contact messages
+    // Check if message type is vcard/contact OR if body contains vCard data
+    const isVCardMessage = message.type === 'vcard' || 
+                           message.type === 'contact' || 
+                           (message.body && message.body.includes('BEGIN:VCARD'));
+    
+    if (isVCardMessage) {
+      try {
+        let vCards = message.vCards || [];
+        
+        // If vCards array is empty but body contains vCard data, parse it
+        if (vCards.length === 0 && message.body && message.body.includes('BEGIN:VCARD')) {
+          // Parse vCard from body - handle multiple vCards separated by END:VCARD
+          const vcardStrings = message.body.split(/END:VCARD/i).filter(str => str.trim().length > 0);
+          
+          vCards = vcardStrings.map(vcardString => {
+            const fullVCard = vcardString.trim() + '\nEND:VCARD';
+            const parsed = parseVCard(fullVCard);
+            return {
+              displayName: parsed.displayName,
+              vcard: fullVCard,
+              ...parsed
+            };
+          });
+        }
+        
+        if (vCards.length > 0) {
+          messageData.vcards = vCards.map(vcard => {
+            // Parse vCard string
+            const vcardString = typeof vcard === 'string' ? vcard : (vcard.vcard || message.body || '');
+            const parsed = parseVCard(vcardString);
+            return {
+              displayName: (typeof vcard === 'object' ? vcard.displayName : null) || parsed.displayName || '',
+              vcard: vcardString,
+              ...parsed
+            };
+          });
+          console.log(`[Channel ${channelId}] 📇 vCard message detected: ${vCards.length} contact(s)`);
+          // Clear body for vCard messages so it doesn't show as text
+          messageData.body = null;
+        }
+      } catch (error) {
+        console.error(`[Channel ${channelId}] Failed to process vCard:`, error.message);
+        console.error(`[Channel ${channelId}] Error stack:`, error.stack);
+      }
+    }
 
     // Handle media attachments with error handling
     if (message.hasMedia) {
