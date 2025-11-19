@@ -72,4 +72,21 @@ class Saturn::Assistant < ApplicationRecord
   def response_count
     responses.count
   end
+
+  def push_event_data
+    {
+      id: id,
+      name: name,
+      avatar_url: avatar_url,
+      type: 'saturn_assistant'
+    }
+  end
+
+  def webhook_data
+    {
+      id: id,
+      name: name,
+      type: 'saturn_assistant'
+    }
+  end
 end
