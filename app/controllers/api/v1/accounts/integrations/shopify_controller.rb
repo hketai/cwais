@@ -1,8 +1,51 @@
 class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::BaseController
   include Shopify::IntegrationHelper
-  before_action :setup_shopify_context, only: [:orders]
-  before_action :fetch_hook, except: [:auth]
+  before_action :setup_shopify_context, only: [:orders, :test]
+  before_action :fetch_hook, except: [:auth, :connect, :show, :test]
   before_action :validate_contact, only: [:orders]
+
+  def show
+    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
+    if hook
+      render json: { hook: { id: hook.id, reference_id: hook.reference_id, enabled: hook.enabled? } }
+    else
+      render json: { hook: nil }, status: :not_found
+    end
+  end
+
+  def connect
+    shop_domain = params[:shop_domain]
+    access_token = params[:access_token]
+
+    return render json: { error: 'Shop domain is required' }, status: :unprocessable_entity if shop_domain.blank?
+    return render json: { error: 'Access token is required' }, status: :unprocessable_entity if access_token.blank?
+
+    # Validate shop domain format
+    unless shop_domain.match?(/\A[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com\z/)
+      return render json: { error: 'Invalid shop domain format' }, status: :unprocessable_entity
+    end
+
+    # Test the access token by making a simple API call
+    begin
+      test_session = ShopifyAPI::Auth::Session.new(shop: shop_domain, access_token: access_token)
+      test_client = ShopifyAPI::Clients::Rest::Admin.new(session: test_session)
+      test_client.get(path: 'shop.json')
+    rescue StandardError => e
+      return render json: { error: "Invalid access token: #{e.message}" }, status: :unprocessable_entity
+    end
+
+    # Create or update the hook
+    hook = Integrations::Hook.find_or_initialize_by(
+      account: Current.account,
+      app_id: 'shopify'
+    )
+    hook.reference_id = shop_domain
+    hook.access_token = access_token
+    hook.status = :enabled
+    hook.save!
+
+    render json: { hook: { id: hook.id, reference_id: hook.reference_id, enabled: hook.enabled? } }
+  end
 
   def auth
     shop_domain = params[:shop_domain]
@@ -19,6 +62,20 @@ class Api::V1::Accounts::Integrations::ShopifyController < Api::V1::Accounts::Ba
     )
 
     render json: { redirect_url: auth_url }
+  end
+
+  def test
+    hook = Integrations::Hook.find_by(account: Current.account, app_id: 'shopify')
+    return render json: { error: 'Integration not found' }, status: :not_found unless hook
+
+    # Test connection by fetching shop info
+    session = ShopifyAPI::Auth::Session.new(shop: hook.reference_id, access_token: hook.access_token)
+    client = ShopifyAPI::Clients::Rest::Admin.new(session: session)
+    shop_info = client.get(path: 'shop.json')
+
+    render json: { success: true, shop: shop_info.body['shop'] }
+  rescue StandardError => e
+    render json: { error: e.message, success: false }, status: :unprocessable_entity
   end
 
   def orders
